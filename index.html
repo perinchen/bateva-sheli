@@ -2424,9 +2424,127 @@ function overlayClose(e, id) {
 }
 
 // ================================================================
+// INITIAL DATA — נטען פעם אחת אם אין משימות
+// ================================================================
+function loadInitialData() {
+  const state = getState();
+  if ((state.tasks||[]).length > 0) return; // כבר יש נתונים
+
+  const T = todayStr();
+  const tasks = [
+    // 🔴 בוערות
+    { id:uid(), title:'לבדוק ביצועי קמפיין ד"ר אמא — חם 1/2/3 ב"למידה מוגבלת"', priority:'fire', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+    { id:uid(), title:'לוודא ש-39 מודעות Meta עדיין ACTIVE ולא נדחו', priority:'fire', categories:['business'], category:'business', estimatedMinutes:15, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+    { id:uid(), title:'להוסיף ANTHROPIC_API_KEY לVERCEL — מועדון לא עובד בלי זה', priority:'fire', categories:['business'], category:'business', estimatedMinutes:10, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+    { id:uid(), title:'להפעיל Breeze Cache ידנית: WP Admin → Plugins → Breeze → Activate', priority:'fire', categories:['business'], category:'business', estimatedMinutes:5, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+
+    // 🟡 השבוע — תוכן
+    { id:uid(), title:'לעצב קרוסלה 1 ד"ר אמא בCanva — הכתיבה מוכנה ב-carousel_dr_ama_1.md', priority:'week', categories:['content'], category:'content', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לכתוב קרוסלה 2: "ידע זה לא רק כוח. ידע זה רוגע."', priority:'week', categories:['content'], category:'content', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לכתוב קרוסלה 3: השיטה של פרין לטווח ארוך', priority:'week', categories:['content'], category:'content', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לבדוק מאניצ\'אט ידנית — לפתוח כל Growth Tool ולאמת שמחובר לפוסט נכון', priority:'week', categories:['business','content'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+
+    // 🟡 השבוע — מועדון
+    { id:uid(), title:'להעלות תוכן VOD למועדון בוורדפרס — לפחות 5 סרטונים ראשונים', priority:'week', categories:['business'], category:'business', estimatedMinutes:90, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'ליצור מוצר WC Subscription ₪97/חודש למועדון', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לעדכן מספר וואטסאפ אמיתי בקוד המועדון (חיפוש wa.me/972000000000)', priority:'week', categories:['business'], category:'business', estimatedMinutes:15, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+
+    // 🟡 השבוע — אתר
+    { id:uid(), title:'לבנות סדרת מיילים ד"ר אמא בפלאשי — 3-5 מיילים אחרי רכישה', priority:'week', categories:['business'], category:'business', estimatedMinutes:120, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להוסיף שעון עצר אמיתי (Countdown) לדף ד"ר אמא — כרגע רק טקסט', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להזיז סקציה why_guide_001 ל-position 7 בדף התולעים', priority:'week', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+
+    // ⚪ ממתין — מועדון השקה
+    { id:uid(), title:'להכניס "בית לאמהות" (42 שיעורים) חזרה למועדון', priority:'wait', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לחבר פרופיל מועדון לפלאשי — עדכון custom fields לדיוור מפולח', priority:'wait', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להעלות תכנים ZoomSession / מאסטרקלאס בוורדפרס', priority:'wait', categories:['business'], category:'business', estimatedMinutes:90, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לכבות bateva_beta_open בוורדפרס אחרי שמוצר מנוי קיים', priority:'wait', categories:['business'], category:'business', estimatedMinutes:10, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לתקן לולאת Cardcom — להוסיף Spinner אחרי לחיצה "שלם"', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+
+    // ⚪ ממתין — שיווק
+    { id:uid(), title:'לבנות Popup יציאה + להפעיל 50 קופונים שיושבים', priority:'wait', categories:['business','content'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'Free shipping bar + 2 Order Bumps לאתר', priority:'wait', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'Post-purchase funnel + חבילה ₪349+', priority:'wait', categories:['business'], category:'business', estimatedMinutes:90, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לכתוב מאמר בלוג ראשון: "10 מוצרים להריון"', priority:'wait', categories:['content'], category:'content', estimatedMinutes:120, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לחדש טוקן Meta — פג תוקף ביוני 2026', priority:'wait', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לחדש מלאי — 29 מוצרים אזלו (שמן חוחובה, אקליפטוס, ערכות ועוד)', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לבדוק שWP Cron חיצוני מוגדר ב-CloudPanel', priority:'wait', categories:['business'], category:'business', estimatedMinutes:15, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+  ];
+
+  const projects = [
+    { id:'dr-ama', title:'ד"ר אמא', status:'active', nextStep:'סדרת מיילים בפלאשי + שעון עצר בדף', color:'#c0392b' },
+    { id:'club', title:'מועדון בטבע שלך', status:'active', nextStep:'API key לVercel + העלאת 5 סרטוני VOD + מוצר מנוי', color:'#7b1fa2' },
+    { id:'worms', title:'מעגל התולעים', status:'active', nextStep:'להזיז why_guide_001 ל-position 7', color:'#1e8449' },
+    { id:'blog', title:'בלוג ba-teva.co.il', status:'planning', nextStep:'מאמר ראשון: 10 מוצרים להריון', color:'#1565c0' },
+    { id:'landing', title:'נחיתה רכה (ספר דיגיטלי)', status:'planning', nextStep:'לתכנן אחרי השקת המועדון', color:'#c2185b' },
+  ];
+
+  const mantras = [
+    'אני יוצרת מקום שבו אמהות מרגישות שלמות',
+    'כל יום שאני נותנת ערך, העסק שלי גדל',
+    'אני בוחרת להתמקד במה שחשוב עכשיו ולא להכביד על עצמי',
+    'הידע שלי הוא הכלי שמשנה חיים של אמהות',
+    'אני מובילה עם אהבה, ידע ובטחון',
+    'כל צעד קטן שאני עושה היום הוא התקדמות אמיתית',
+    'אני מאמינה בשליחות שלי ובדרך שלי',
+    'אני מסייעת לאמהות לסמוך על עצמן ועל הטבע',
+    'השיטה שלי עובדת כי היא נולדה מאהבה אמיתית',
+    'אני בוחרת רוגע על פני פחד — בכל יום מחדש',
+  ];
+
+  const weeklyGoals = [
+    { id:uid(), title:'לבדוק ביצועי Meta פעם אחת', completed:false, week:T },
+    { id:uid(), title:'לעצב קרוסלה אחת לפחות', completed:false, week:T },
+    { id:uid(), title:'להכניס ANTHROPIC_API_KEY למועדון', completed:false, week:T },
+  ];
+
+  const goals = {
+    monthly: [
+      { id:uid(), title:'הכנסה מהאתר', period:'monthly', target:15000, current:0, unit:'₪' },
+      { id:uid(), title:'פוסטים/קרוסלות לאינסטגרם', period:'monthly', target:12, current:0, unit:'פוסטים' },
+      { id:uid(), title:'גייסות למועדון', period:'monthly', target:50, current:0, unit:'חברות' },
+    ],
+    quarterly: [
+      { id:uid(), title:'הכנסה רבעונית', period:'quarterly', target:60000, current:0, unit:'₪' },
+      { id:uid(), title:'עוקבות אינסטגרם', period:'quarterly', target:38000, current:34000, unit:'עוקבות' },
+      { id:uid(), title:'השקת מועדון מלא', period:'quarterly', target:1, current:0, unit:'✓' },
+    ],
+    annual: [
+      { id:uid(), title:'הכנסה שנתית', period:'annual', target:1200000, current:303514, unit:'₪' },
+      { id:uid(), title:'חברות מועדון', period:'annual', target:400, current:0, unit:'חברות' },
+      { id:uid(), title:'50K עוקבות אינסטגרם', period:'annual', target:50000, current:34000, unit:'עוקבות' },
+    ]
+  };
+
+  const contentIdeas = [
+    { id:uid(), title:'יום בחיי — בוקר עם שמנים', type:'reel', status:'idea' },
+    { id:uid(), title:'5 שמנים שכל אמא חייבת', type:'carousel', status:'idea' },
+    { id:uid(), title:'מה עושים כשהילד חולה ב-2 בלילה', type:'post', status:'idea' },
+    { id:uid(), title:'הסיפור של פרין — למה ארומתרפיה', type:'reel', status:'idea' },
+    { id:uid(), title:'הבדל בין שמן מדולל לטהור', type:'carousel', status:'idea' },
+    { id:uid(), title:'שגרת בוקר בריאה לילדים', type:'post', status:'idea' },
+    { id:uid(), title:'תגובות אמהות + הוכחות חברתיות', type:'carousel', status:'idea' },
+  ];
+
+  updateState(st => {
+    st.tasks = tasks;
+    st.projects = projects;
+    st.mantras = mantras;
+    st.weeklyGoals = weeklyGoals;
+    st.goals = goals;
+    st.contentIdeas = contentIdeas;
+    st.financials = { monthlyGoal:15000, entries:{} };
+    return st;
+  });
+}
+
+// ================================================================
 // INIT
 // ================================================================
 function init() {
+  // Load initial data if first time
+  loadInitialData();
+
   // Update last login
   updateState(state => {
     state.lastLoginDate = todayStr();
