@@ -139,29 +139,85 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
 .badge-wait { background:var(--wait-bg); color:var(--text-muted); }
 .badge-green { background:var(--green-light); color:var(--green); }
 
-/* TASK ITEM */
+/* TASK ITEM — rich colored version */
 .task-item {
   display:flex; align-items:flex-start; gap:10px; padding:12px 14px;
   background:var(--surface); border-radius:var(--radius-sm); margin-bottom:8px;
-  border:1px solid var(--border); cursor:pointer; transition:all .15s;
+  border:1px solid var(--border); border-right-width:4px;
+  cursor:pointer; transition:all .15s;
 }
 .task-item:active { transform:scale(.99); }
-.task-item.done { opacity:.5; }
+.task-item.done { opacity:.45; }
 .task-item.done .task-title { text-decoration:line-through; }
+.task-item.pri-fire { border-right-color:#c0392b; background:#fffaf9; }
+.task-item.pri-week { border-right-color:#c07a00; background:#fffdf5; }
+.task-item.pri-wait { border-right-color:#bdbdbd; background:#fafafa; }
 .task-check {
   width:22px; height:22px; border-radius:50%; border:2px solid var(--border);
   flex-shrink:0; display:flex; align-items:center; justify-content:center;
-  font-size:12px; margin-top:1px; transition:all .2s;
+  font-size:12px; margin-top:2px; transition:all .2s; cursor:pointer;
 }
-.task-item.fire .task-check { border-color:var(--fire); }
-.task-item.week .task-check { border-color:var(--week); }
+.task-item.pri-fire .task-check { border-color:#c0392b; }
+.task-item.pri-week .task-check { border-color:#c07a00; }
 .task-item.done .task-check { background:var(--green); border-color:var(--green); color:#fff; }
 .task-body { flex:1; min-width:0; }
-.task-title { font-size:15px; font-weight:500; line-height:1.3; }
-.task-meta { font-size:12px; color:var(--text-muted); margin-top:3px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-.task-actions { display:flex; gap:6px; align-items:center; }
-.task-del { background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer; padding:4px; opacity:0; transition:opacity .2s; }
-.task-item:hover .task-del { opacity:1; }
+.task-title { font-size:15px; font-weight:500; line-height:1.35; margin-bottom:6px; }
+.task-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.tag {
+  display:inline-flex; align-items:center; gap:3px;
+  padding:2px 8px; border-radius:100px; font-size:11px; font-weight:700;
+}
+.tag-fire  { background:#fde8e6; color:#c0392b; }
+.tag-week  { background:#fef3cd; color:#c07a00; }
+.tag-wait  { background:#f0f0f0; color:#777; }
+.tag-business { background:#e3f0fb; color:#1565c0; }
+.tag-content  { background:#f3e5f5; color:#7b1fa2; }
+.tag-personal { background:#fce4ec; color:#c2185b; }
+.tag-learning { background:#fbe9e7; color:#d84315; }
+.tag-time     { background:#e8f5e9; color:#2e7d32; }
+.task-del { background:none; border:none; color:#ccc; font-size:16px; cursor:pointer; padding:4px 2px; flex-shrink:0; transition:color .15s; }
+.task-del:hover { color:var(--fire); }
+
+/* FILTER BAR */
+.filter-bar { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; margin-bottom:12px; }
+.filter-bar::-webkit-scrollbar { display:none; }
+.filter-chip {
+  padding:6px 13px; border-radius:100px; border:1.5px solid var(--border);
+  background:var(--surface); font-size:12px; font-weight:700; cursor:pointer;
+  white-space:nowrap; font-family:'Heebo',sans-serif; color:var(--text-muted);
+  transition:all .15s; flex-shrink:0;
+}
+.filter-chip.on { border-color:transparent; color:#fff; }
+.filter-chip.fc-fire.on  { background:#c0392b; }
+.filter-chip.fc-week.on  { background:#c07a00; }
+.filter-chip.fc-wait.on  { background:#8e8e8e; }
+.filter-chip.fc-business.on { background:#1565c0; }
+.filter-chip.fc-content.on  { background:#7b1fa2; }
+.filter-chip.fc-personal.on { background:#c2185b; }
+.filter-chip.fc-learning.on { background:#d84315; }
+.filter-chip.fc-t1.on { background:#2e7d32; }
+.filter-chip.fc-t2.on { background:#388e3c; }
+.filter-chip.fc-t3.on { background:#43a047; }
+.filter-chip.fc-t4.on { background:#1b5e20; }
+.filter-divider { width:1px; background:var(--border); flex-shrink:0; align-self:stretch; margin:4px 2px; }
+
+/* TASKS COUNT ROW */
+.tasks-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.tasks-count { font-size:13px; color:var(--text-muted); }
+.tasks-sort { font-size:12px; color:var(--text-muted); background:none; border:1px solid var(--border); border-radius:8px; padding:4px 8px; cursor:pointer; font-family:'Heebo',sans-serif; }
+
+/* MULTI-CAT SELECTOR */
+.cat-pills { display:flex; flex-wrap:wrap; gap:6px; }
+.cat-pill {
+  padding:7px 14px; border-radius:100px; border:2px solid var(--border);
+  font-size:13px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif;
+  transition:all .15s; background:var(--surface); color:var(--text-muted);
+}
+.cat-pill.selected { color:#fff; border-color:transparent; }
+.cat-pill.cp-business.selected { background:#1565c0; }
+.cat-pill.cp-content.selected  { background:#7b1fa2; }
+.cat-pill.cp-personal.selected { background:#c2185b; }
+.cat-pill.cp-learning.selected { background:#d84315; }
 
 /* SECTION HEADER */
 .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -499,42 +555,37 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
         </div>
       </div>
 
-      <!-- Fire tasks -->
-      <div class="priority-section" id="section-fire">
-        <div class="priority-header" onclick="toggleSection('fire')">
-          <div class="priority-dot fire"></div>
-          <span class="priority-label">🔴 בוער — חייב היום</span>
-          <span class="priority-chevron open" id="chevron-fire">▼</span>
-        </div>
-        <div class="priority-body" id="body-fire">
-          <div id="tasks-fire"></div>
-        </div>
+      <!-- Filter bar -->
+      <div class="filter-bar" id="filter-bar">
+        <!-- Priority -->
+        <button class="filter-chip fc-fire" data-filter="pri:fire" onclick="toggleFilter('pri:fire',this)">🔴 בוער</button>
+        <button class="filter-chip fc-week" data-filter="pri:week" onclick="toggleFilter('pri:week',this)">🟡 שבוע</button>
+        <button class="filter-chip fc-wait" data-filter="pri:wait" onclick="toggleFilter('pri:wait',this)">⚪ ממתין</button>
+        <div class="filter-divider"></div>
+        <!-- Category -->
+        <button class="filter-chip fc-business" data-filter="cat:business" onclick="toggleFilter('cat:business',this)">💼 עסק</button>
+        <button class="filter-chip fc-content"  data-filter="cat:content"  onclick="toggleFilter('cat:content',this)">📱 תוכן</button>
+        <button class="filter-chip fc-personal" data-filter="cat:personal" onclick="toggleFilter('cat:personal',this)">🌸 אישי</button>
+        <button class="filter-chip fc-learning" data-filter="cat:learning" onclick="toggleFilter('cat:learning',this)">📚 למידה</button>
+        <div class="filter-divider"></div>
+        <!-- Time -->
+        <button class="filter-chip fc-t1" data-filter="time:15"  onclick="toggleFilter('time:15',this)">⚡ עד 15'</button>
+        <button class="filter-chip fc-t2" data-filter="time:30"  onclick="toggleFilter('time:30',this)">⏱ 15-30'</button>
+        <button class="filter-chip fc-t3" data-filter="time:60"  onclick="toggleFilter('time:60',this)">⏰ 30-60'</button>
+        <button class="filter-chip fc-t4" data-filter="time:90"  onclick="toggleFilter('time:90',this)">🕐 60'+</button>
       </div>
 
-      <!-- Week tasks -->
-      <div class="priority-section" id="section-week">
-        <div class="priority-header" onclick="toggleSection('week')">
-          <div class="priority-dot week"></div>
-          <span class="priority-label">🟡 השבוע — חשוב, לא דחוף</span>
-          <span class="priority-chevron open" id="chevron-week">▼</span>
-        </div>
-        <div class="priority-body" id="body-week">
-          <div id="tasks-week"></div>
-        </div>
+      <!-- Tasks list -->
+      <div class="tasks-header">
+        <span class="tasks-count" id="tasks-count"></span>
+        <select class="tasks-sort" id="tasks-sort" onchange="renderNow()">
+          <option value="priority">לפי דחיפות</option>
+          <option value="time">לפי זמן</option>
+          <option value="recent">לפי תאריך</option>
+        </select>
       </div>
 
-      <!-- Waiting tasks -->
-      <div class="priority-section">
-        <div class="priority-header" onclick="toggleSection('wait')">
-          <div class="priority-dot wait"></div>
-          <span class="priority-label">⚪ ממתין — יכול לחכות</span>
-          <span class="priority-chevron" id="chevron-wait">▼</span>
-        </div>
-        <div class="priority-body" id="body-wait" style="max-height:0;overflow:hidden;">
-          <div id="tasks-wait"></div>
-        </div>
-      </div>
-
+      <div id="tasks-all"></div>
       <div style="height:80px"></div>
     </div><!-- /now -->
 
@@ -770,13 +821,13 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">קטגוריה</label>
-      <select class="select" id="task-category">
-        <option value="business">💼 עסק</option>
-        <option value="content">📱 תוכן</option>
-        <option value="personal">🌸 אישי</option>
-        <option value="learning">📚 למידה</option>
-      </select>
+      <label class="form-label">קטגוריות (אפשר כמה)</label>
+      <div class="cat-pills">
+        <button type="button" class="cat-pill cp-business" onclick="toggleCatPill('business',this)">💼 עסק</button>
+        <button type="button" class="cat-pill cp-content"  onclick="toggleCatPill('content',this)">📱 תוכן</button>
+        <button type="button" class="cat-pill cp-personal" onclick="toggleCatPill('personal',this)">🌸 אישי</button>
+        <button type="button" class="cat-pill cp-learning" onclick="toggleCatPill('learning',this)">📚 למידה</button>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">תאריך יעד (אופציונלי)</label>
@@ -974,6 +1025,8 @@ let breakdownSubtasks = [];
 let dayRating = 0;
 let selectedCommitments = [];
 let selectedWeekDay = null;
+let activeFilters = new Set();
+let selectedCategories = []; // for add-task modal multi-select
 
 // ================================================================
 // STORAGE
@@ -1269,40 +1322,115 @@ function saveCommitments() {
 }
 
 // ================================================================
+// FILTER LOGIC
+// ================================================================
+function toggleFilter(key, btn) {
+  if (activeFilters.has(key)) {
+    activeFilters.delete(key);
+    btn.classList.remove('on');
+  } else {
+    activeFilters.add(key);
+    btn.classList.add('on');
+  }
+  renderNow();
+}
+
+function clearFilters() {
+  activeFilters.clear();
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('on'));
+  renderNow();
+}
+
+function taskMatchesFilters(t) {
+  if (activeFilters.size === 0) return true;
+  const cats = t.categories || [t.category].filter(Boolean);
+  const mins = t.estimatedMinutes || 30;
+  const priFilters  = [...activeFilters].filter(f => f.startsWith('pri:'));
+  const catFilters  = [...activeFilters].filter(f => f.startsWith('cat:'));
+  const timeFilters = [...activeFilters].filter(f => f.startsWith('time:'));
+
+  if (priFilters.length && !priFilters.includes('pri:' + t.priority)) return false;
+  if (catFilters.length && !catFilters.some(f => cats.includes(f.replace('cat:','')))) return false;
+  if (timeFilters.length) {
+    const ok = timeFilters.some(f => {
+      const v = f.replace('time:','');
+      if (v==='15')  return mins <= 15;
+      if (v==='30')  return mins > 15 && mins <= 30;
+      if (v==='60')  return mins > 30 && mins <= 60;
+      if (v==='90')  return mins > 60;
+      return true;
+    });
+    if (!ok) return false;
+  }
+  return true;
+}
+
+// ================================================================
 // NOW SCREEN
 // ================================================================
 function renderNow() {
   const state = getState();
-  const tasks = state.tasks || [];
+  const sortMode = document.getElementById('tasks-sort')?.value || 'priority';
+  let tasks = (state.tasks || []).filter(t => !t.completed && taskMatchesFilters(t));
 
-  ['fire','week','wait'].forEach(p => {
-    const filtered = tasks.filter(t => t.priority === p && !t.completed);
-    const el = document.getElementById('tasks-' + (p==='wait'?'wait':p));
-    if (!el) return;
-    el.innerHTML = filtered.length
-      ? filtered.map(t => renderTaskItem(t)).join('')
-      : `<div class="empty-state"><p>${p==='fire'?'לא בוער כלום 🎉':p==='week'?'אין משימות לשבוע עדיין':'כלום ממתין'}</p></div>`;
-  });
+  if (sortMode === 'priority') {
+    const order = {fire:0, week:1, wait:2};
+    tasks.sort((a,b) => (order[a.priority]||1) - (order[b.priority]||1));
+  } else if (sortMode === 'time') {
+    tasks.sort((a,b) => (a.estimatedMinutes||30) - (b.estimatedMinutes||30));
+  } else {
+    tasks.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  }
+
+  const el = document.getElementById('tasks-all');
+  const countEl = document.getElementById('tasks-count');
+  if (countEl) countEl.textContent = tasks.length + ' משימות' + (activeFilters.size ? ' (מסוננות)' : '');
+
+  if (!el) return;
+  el.innerHTML = tasks.length
+    ? tasks.map(t => renderTaskItem(t)).join('')
+    : `<div class="empty-state"><div class="emoji">${activeFilters.size ? '🔍' : '🎉'}</div><p>${activeFilters.size ? 'אין משימות עם הסינון הזה' : 'כל המשימות הושלמו!'}</p></div>`;
 }
 
+const CAT_COLORS = {
+  business: { tag:'tag-business', label:'💼 עסק' },
+  content:  { tag:'tag-content',  label:'📱 תוכן' },
+  personal: { tag:'tag-personal', label:'🌸 אישי' },
+  learning: { tag:'tag-learning', label:'📚 למידה' }
+};
+const PRI_COLORS = {
+  fire: { tag:'tag-fire', label:'🔴 בוער' },
+  week: { tag:'tag-week', label:'🟡 שבוע' },
+  wait: { tag:'tag-wait', label:'⚪ ממתין' }
+};
+
 function renderTaskItem(t) {
-  const cat = catLabel(t.category);
-  const dueStr = t.dueDate ? ` · ${t.dueDate}` : '';
+  const cats = t.categories || [t.category].filter(Boolean);
+  const priInfo = PRI_COLORS[t.priority] || PRI_COLORS.wait;
+  const mins = t.estimatedMinutes;
+  const timeLabel = mins
+    ? (mins <= 15 ? `⚡ ${mins}'` : mins <= 30 ? `⏱ ${mins}'` : mins <= 60 ? `⏰ ${mins}'` : `🕐 ${mins}'`)
+    : null;
+
+  const catTags = cats.map(c => {
+    const ci = CAT_COLORS[c];
+    return ci ? `<span class="tag ${ci.tag}">${ci.label}</span>` : '';
+  }).join('');
+
   return `
-    <div class="task-item ${t.priority==='fire'?'fire':t.priority==='week'?'week':''} ${t.completed?'done':''}" id="task-${t.id}">
+    <div class="task-item pri-${t.priority} ${t.completed?'done':''}" id="task-${t.id}">
       <div class="task-check" onclick="completeTask('${t.id}')">${t.completed?'✓':''}</div>
       <div class="task-body">
         <div class="task-title">${esc(t.title)}</div>
-        <div class="task-meta">
-          <span>${cat}</span>
-          ${t.estimatedMinutes ? `<span>⏱ ${t.estimatedMinutes} דק'</span>` : ''}
-          ${dueStr ? `<span>${dueStr}</span>` : ''}
-          ${t.parentId ? `<span style="color:var(--green)">⬆ תת-משימה</span>` : ''}
+        <div class="task-tags">
+          <span class="tag ${priInfo.tag}">${priInfo.label}</span>
+          ${catTags}
+          ${timeLabel ? `<span class="tag tag-time">${timeLabel}</span>` : ''}
+          ${t.dueDate ? `<span class="tag" style="background:#f5f5f5;color:#555;">📅 ${t.dueDate}</span>` : ''}
+          ${t.parentId ? `<span class="tag" style="background:#e8f5e9;color:#2e7d32;">⬆ תת-משימה</span>` : ''}
         </div>
       </div>
-      <div class="task-actions">
-        <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
-      </div>
+      <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
     </div>
   `;
 }
@@ -1362,19 +1490,39 @@ function hideSuggestion() {
   currentSuggestion = null;
 }
 
+function toggleCatPill(cat, btn) {
+  const idx = selectedCategories.indexOf(cat);
+  if (idx > -1) {
+    selectedCategories.splice(idx,1);
+    btn.classList.remove('selected');
+  } else {
+    selectedCategories.push(cat);
+    btn.classList.add('selected');
+  }
+}
+
+function resetCatPills() {
+  selectedCategories = ['business'];
+  document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('selected'));
+  const biz = document.querySelector('.cat-pill.cp-business');
+  if (biz) { biz.classList.add('selected'); }
+}
+
 // ================================================================
 // TASK MODALS
 // ================================================================
 function saveTask() {
   const title = document.getElementById('task-title').value.trim();
   if (!title) { toast('כתבי שם למשימה'); return; }
+  const cats = selectedCategories.length ? selectedCategories : ['business'];
 
   updateState(state => {
     state.tasks.push({
       id: uid(),
       title,
       priority: document.getElementById('task-priority').value,
-      category: document.getElementById('task-category').value,
+      category: cats[0],
+      categories: cats,
       dueDate: document.getElementById('task-due').value || null,
       estimatedMinutes: parseInt(document.getElementById('task-minutes').value) || 30,
       completed: false,
@@ -1388,6 +1536,9 @@ function saveTask() {
 
   closeModal('modal-task');
   document.getElementById('task-title').value = '';
+  document.getElementById('task-due').value = '';
+  document.getElementById('task-minutes').value = '30';
+  resetCatPills();
   renderNow();
   renderWeek();
   toast('✅ משימה נוספה!');
