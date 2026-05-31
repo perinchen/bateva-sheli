@@ -2329,8 +2329,56 @@ function init() {
   if (bodyWeek) bodyWeek.style.maxHeight = '2000px';
 }
 
+// ================================================================
+// PASSWORD LOCK
+// ================================================================
+function checkPassword() {
+  const stored = localStorage.getItem('bateva-auth');
+  if (stored === 'ok') { init(); return; }
+
+  // Show lock screen
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('splash').style.display = 'none';
+
+  const lock = document.createElement('div');
+  lock.id = 'lock-screen';
+  lock.innerHTML = `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f5f0;padding:24px;">
+      <div style="background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:340px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+        <div style="font-size:52px;margin-bottom:12px;">🌿</div>
+        <h1 style="font-size:24px;font-weight:900;color:#2d5c2d;font-family:Heebo,sans-serif;margin:0 0 6px;">בטבע שלי</h1>
+        <p style="color:#7a7a7a;font-size:14px;margin:0 0 24px;font-family:Heebo,sans-serif;">הכנסי סיסמה להמשך</p>
+        <input type="password" id="pw-input" placeholder="סיסמה..." autofocus
+          style="width:100%;padding:14px;border:2px solid #e8e4df;border-radius:12px;font-size:18px;text-align:center;font-family:Heebo,sans-serif;outline:none;margin-bottom:12px;"
+          onkeydown="if(event.key==='Enter')tryLogin()">
+        <button onclick="tryLogin()"
+          style="width:100%;padding:14px;background:#2d5c2d;color:#fff;border:none;border-radius:100px;font-size:16px;font-weight:700;font-family:Heebo,sans-serif;cursor:pointer;">
+          כניסה ✓
+        </button>
+        <p id="pw-error" style="color:#c0392b;font-size:13px;margin-top:10px;display:none;font-family:Heebo,sans-serif;">סיסמה שגויה, נסי שוב</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(lock);
+}
+
+function tryLogin() {
+  const pw = document.getElementById('pw-input').value;
+  // Password is: bateva2026
+  if (pw === 'bateva2026') {
+    localStorage.setItem('bateva-auth', 'ok');
+    document.getElementById('lock-screen').remove();
+    document.getElementById('app').style.display = 'flex';
+    init();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
 // Start
-init();
+checkPassword();
 </script>
 </body>
 </html>
