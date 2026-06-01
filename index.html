@@ -876,9 +876,20 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
     </div>
 
     <div class="form-group">
-      <label class="form-label">📅 Google Calendar — iCal URL</label>
-      <input class="input" id="set-cal-url" placeholder="https://calendar.google.com/calendar/ical/...">
-      <p class="text-muted mt-8">Google Calendar ← הגדרות ← "כתובת קובץ iCal פרטי"</p>
+      <div class="flex-between" style="margin-bottom:6px;">
+        <label class="form-label" style="margin:0;">📅 Google Calendar — לוחות (שורה = לוח אחד)</label>
+        <button onclick="openCalHelp()" style="background:none;border:none;color:var(--green);font-size:12px;cursor:pointer;font-family:Heebo,sans-serif;font-weight:700;">איך מוצאים?</button>
+      </div>
+      <textarea class="textarea" id="set-cal-url" rows="4" placeholder="https://calendar.google.com/calendar/ical/...&#10;https://calendar.google.com/calendar/ical/... (לוח משותף)"></textarea>
+      <p class="text-muted mt-8" style="line-height:1.5;">כל לוח בשורה נפרדת — הלוח האישי <b>וגם</b> הלוחות המשותפים.<br>הגדרות ← שם הלוח ← "כתובת סודית בפורמט iCal"</p>
+      <div id="cal-help-box" style="display:none;background:var(--green-pale);border-radius:10px;padding:12px;margin-top:8px;font-size:13px;line-height:1.7;">
+        <b>איך מוצאים את ה-URL:</b><br>
+        1. גוגל קלנדר ← גלגל שיניים ⚙️ ← הגדרות<br>
+        2. בתפריט שמאל — לחצי על שם הלוח (לדוגמה: perinchen1@gmail.com)<br>
+        3. גלגלי למטה עד "כתובת סודית בפורמט iCal"<br>
+        4. לחצי ICAL, העתיקי את ה-URL<br>
+        5. לכל לוח משותף — אותו תהליך
+      </div>
     </div>
 
     <div class="form-group">
@@ -2736,22 +2747,29 @@ function chatKeydown(e) {
 // ================================================================
 function openSettingsModal() {
   const state = getState();
-  document.getElementById('set-api-key').value = state.settings.anthropicKey || '';
-  document.getElementById('set-cal-url').value = state.settings.calendarUrl || '';
+  const urls = Array.isArray(state.settings.calendarUrls)
+    ? state.settings.calendarUrls.join('\n')
+    : (state.settings.calendarUrl || '');
+  document.getElementById('set-cal-url').value = urls;
   document.getElementById('set-monthly-goal').value = state.settings.monthlyGoal || 15000;
   document.getElementById('set-mantras').value = (state.mantras || []).join('\n');
 }
 
+function openCalHelp() {
+  const box = document.getElementById('cal-help-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
 function saveSettings() {
-  const key = document.getElementById('set-api-key').value.trim();
-  const calUrl = document.getElementById('set-cal-url').value.trim();
+  const calRaw = document.getElementById('set-cal-url').value.trim();
+  const calUrls = calRaw.split('\n').map(s => s.trim()).filter(s => s.startsWith('http'));
   const monthlyGoal = parseInt(document.getElementById('set-monthly-goal').value) || 15000;
   const mantrasRaw = document.getElementById('set-mantras').value.trim();
   const mantras = mantrasRaw.split('\n').map(s => s.trim()).filter(Boolean);
 
   updateState(state => {
-    state.settings.anthropicKey = key;
-    state.settings.calendarUrl = calUrl;
+    state.settings.calendarUrls = calUrls;
+    state.settings.calendarUrl = calUrls[0] || '';
     state.settings.monthlyGoal = monthlyGoal;
     state.settings.setupDone = true;
     state.mantras = mantras.length ? mantras : DEFAULT_STATE.mantras;
@@ -2761,8 +2779,7 @@ function saveSettings() {
 
   closeModal('modal-settings');
   toast('⚙️ הגדרות נשמרו!');
-
-  if (calUrl) fetchCalendar(calUrl);
+  if (calUrls.length) fetchAllCalendars(calUrls);
 }
 
 function exportData() {
@@ -2782,20 +2799,53 @@ function confirmReset() {
 }
 
 // ================================================================
-// GOOGLE CALENDAR (iCal)
+// GOOGLE CALENDAR (iCal — multiple calendars)
 // ================================================================
+async function fetchAllCalendars(urls) {
+  if (!urls || !urls.length) return;
+  const validUrls = Array.isArray(urls) ? urls : [urls];
+  let allEvents = [];
+  let successCount = 0;
+
+  await Promise.allSettled(validUrls.map(async (url) => {
+    try {
+      const events = await fetchCalendar(url);
+      if (events) { allEvents = [...allEvents, ...events]; successCount++; }
+    } catch(e) { console.warn('Calendar fetch failed for', url, e.message); }
+  }));
+
+  // Deduplicate by uid
+  const seen = new Set();
+  allEvents = allEvents.filter(e => { if (seen.has(e.uid)) return false; seen.add(e.uid); return true; });
+  allEvents.sort((a,b) => (a.date||'').localeCompare(b.date||'') || (a.time||'').localeCompare(b.time||''));
+
+  updateState(state => { state.calendarEvents = allEvents; return state; });
+  if (successCount > 0) toast(`📅 ${successCount} לוח${successCount>1?'ות':''} עודכן${successCount>1?'ו':''}! (${allEvents.length} אירועים)`);
+  else toast('⚠️ לא הצלחתי לטעון את היומן — בדקי את ה-URL');
+}
+
 async function fetchCalendar(url) {
-  if (!url) return;
+  if (!url) return null;
   try {
-    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-    const resp = await fetch(proxy);
-    if (!resp.ok) throw new Error('fetch failed');
-    const text = await resp.text();
-    const events = parseICS(text);
-    updateState(state => { state.calendarEvents = events; return state; });
-    toast('📅 יומן עודכן!');
+    // Try direct fetch first (some servers support CORS)
+    let text;
+    try {
+      const direct = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (direct.ok) text = await direct.text();
+    } catch(e) { /* try proxy */ }
+
+    if (!text) {
+      const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+      const resp = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
+      if (!resp.ok) throw new Error('proxy failed ' + resp.status);
+      text = await resp.text();
+    }
+
+    if (!text || !text.includes('BEGIN:VCALENDAR')) throw new Error('not a valid iCal');
+    return parseICS(text);
   } catch(e) {
-    console.warn('Calendar fetch failed:', e.message);
+    console.warn('fetchCalendar error:', e.message);
+    return null;
   }
 }
 
@@ -3218,11 +3268,10 @@ function init() {
     return state;
   });
 
-  // Fetch calendar if set
+  // Fetch all calendars
   const state = getState();
-  if (state.settings.calendarUrl) {
-    fetchCalendar(state.settings.calendarUrl);
-  }
+  const calUrls = state.settings.calendarUrls || (state.settings.calendarUrl ? [state.settings.calendarUrl] : []);
+  if (calUrls.length) fetchAllCalendars(calUrls);
 
   // Choose initial screen based on time
   const hour = new Date().getHours();
