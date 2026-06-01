@@ -3260,31 +3260,57 @@ function loadInitialData() {
     const existingLearn = new Set((st.learningItems||[]).map(i=>i.title));
     st.learningItems = [...(st.learningItems||[]), ...learningItems.filter(i => !existingLearn.has(i.title))];
 
-    // v4: real 2026 revenue targets + monthly breakdown
+    // v4: real 2026 revenue targets — physical + digital breakdown
     const v4Goals = {
       monthly: [
-        { id:uid(), title:'הכנסה — יוני 2026', period:'monthly', target:150000, current:0, unit:'₪', month:'2026-06' },
-        { id:uid(), title:'הכנסה — יולי 2026',  period:'monthly', target:150000, current:0, unit:'₪', month:'2026-07' },
-        { id:uid(), title:'הכנסה — אוגוסט 2026',period:'monthly', target:150000, current:0, unit:'₪', month:'2026-08' },
-        { id:uid(), title:'הכנסה — ספטמבר 2026',period:'monthly', target:200000, current:0, unit:'₪', month:'2026-09' },
-        { id:uid(), title:'הכנסה — אוקטובר 2026',period:'monthly', target:250000, current:0, unit:'₪', month:'2026-10' },
-        { id:uid(), title:'הכנסה — נובמבר 2026', period:'monthly', target:300000, current:0, unit:'₪', month:'2026-11' },
-        { id:uid(), title:'הכנסה — דצמבר 2026',  period:'monthly', target:300000, current:0, unit:'₪', month:'2026-12' },
+        // יוני
+        { id:uid(), title:'יוני — סה"כ', period:'monthly', target:150000, current:0, unit:'₪', month:'2026-06' },
+        { id:uid(), title:'יוני — פיזי (שמנים, ערכות)', period:'monthly', target:100000, current:0, unit:'₪', month:'2026-06' },
+        { id:uid(), title:'יוני — דיגיטלי (קורסים, מועדון)', period:'monthly', target:50000, current:0, unit:'₪', month:'2026-06' },
+        // יולי
+        { id:uid(), title:'יולי — סה"כ', period:'monthly', target:150000, current:0, unit:'₪', month:'2026-07' },
+        { id:uid(), title:'יולי — פיזי', period:'monthly', target:100000, current:0, unit:'₪', month:'2026-07' },
+        { id:uid(), title:'יולי — דיגיטלי', period:'monthly', target:50000, current:0, unit:'₪', month:'2026-07' },
+        // אוגוסט
+        { id:uid(), title:'אוגוסט — סה"כ', period:'monthly', target:150000, current:0, unit:'₪', month:'2026-08' },
+        { id:uid(), title:'אוגוסט — פיזי', period:'monthly', target:80000, current:0, unit:'₪', month:'2026-08' },
+        { id:uid(), title:'אוגוסט — דיגיטלי', period:'monthly', target:70000, current:0, unit:'₪', month:'2026-08' },
+        // ספטמבר
+        { id:uid(), title:'ספטמבר — סה"כ', period:'monthly', target:200000, current:0, unit:'₪', month:'2026-09' },
+        { id:uid(), title:'ספטמבר — פיזי', period:'monthly', target:120000, current:0, unit:'₪', month:'2026-09' },
+        { id:uid(), title:'ספטמבר — דיגיטלי', period:'monthly', target:80000, current:0, unit:'₪', month:'2026-09' },
+        // אוקטובר
+        { id:uid(), title:'אוקטובר — סה"כ', period:'monthly', target:250000, current:0, unit:'₪', month:'2026-10' },
+        { id:uid(), title:'אוקטובר — פיזי', period:'monthly', target:150000, current:0, unit:'₪', month:'2026-10' },
+        { id:uid(), title:'אוקטובר — דיגיטלי', period:'monthly', target:100000, current:0, unit:'₪', month:'2026-10' },
+        // נובמבר
+        { id:uid(), title:'נובמבר — סה"כ', period:'monthly', target:300000, current:0, unit:'₪', month:'2026-11' },
+        { id:uid(), title:'נובמבר — פיזי', period:'monthly', target:200000, current:0, unit:'₪', month:'2026-11' },
+        { id:uid(), title:'נובמבר — דיגיטלי', period:'monthly', target:100000, current:0, unit:'₪', month:'2026-11' },
+        // דצמבר
+        { id:uid(), title:'דצמבר — סה"כ', period:'monthly', target:300000, current:0, unit:'₪', month:'2026-12' },
+        { id:uid(), title:'דצמבר — פיזי', period:'monthly', target:200000, current:0, unit:'₪', month:'2026-12' },
+        { id:uid(), title:'דצמבר — דיגיטלי', period:'monthly', target:100000, current:0, unit:'₪', month:'2026-12' },
+        // שאר
         { id:uid(), title:'פוסטים לאינסטגרם', period:'monthly', target:12, current:0, unit:'פוסטים' },
         { id:uid(), title:'גייסות למועדון', period:'monthly', target:50, current:0, unit:'חברות' },
       ],
       quarterly: [
-        { id:uid(), title:'הכנסה Q3 2026 (יולי-ספטמבר)', period:'quarterly', target:500000, current:0, unit:'₪' },
-        { id:uid(), title:'הכנסה Q4 2026 (אוקטובר-דצמבר)', period:'quarterly', target:850000, current:0, unit:'₪' },
+        { id:uid(), title:'Q3 פיזי (יול-ספט)', period:'quarterly', target:300000, current:0, unit:'₪' },
+        { id:uid(), title:'Q3 דיגיטלי (יול-ספט)', period:'quarterly', target:200000, current:0, unit:'₪' },
+        { id:uid(), title:'Q4 פיזי (אוק-דצ)', period:'quarterly', target:550000, current:0, unit:'₪' },
+        { id:uid(), title:'Q4 דיגיטלי (אוק-דצ)', period:'quarterly', target:300000, current:0, unit:'₪' },
         { id:uid(), title:'עוקבות אינסטגרם', period:'quarterly', target:38000, current:34000, unit:'עוקבות' },
         { id:uid(), title:'חברות מועדון', period:'quarterly', target:200, current:0, unit:'חברות' },
         { id:uid(), title:'השקת מועדון מלא', period:'quarterly', target:1, current:0, unit:'✓' },
       ],
       annual: [
-        { id:uid(), title:'הכנסה שנתית 2026 (נטו אחרי מעמ)', period:'annual', target:1500000, current:303514, unit:'₪' },
-        { id:uid(), title:'רווח שנתי (30% ממחזור)', period:'annual', target:500000, current:0, unit:'₪' },
-        { id:uid(), title:'50K עוקבות אינסטגרם', period:'annual', target:50000, current:34000, unit:'עוקבות' },
-        { id:uid(), title:'חברות מועדון פעילות', period:'annual', target:400, current:0, unit:'חברות' },
+        { id:uid(), title:'הכנסה שנתית (נטו אחרי מעמ)', period:'annual', target:1500000, current:303514, unit:'₪' },
+        { id:uid(), title:'פיזי שנתי', period:'annual', target:950000, current:303514, unit:'₪' },
+        { id:uid(), title:'דיגיטלי שנתי', period:'annual', target:550000, current:0, unit:'₪' },
+        { id:uid(), title:'רווח שנתי 30%', period:'annual', target:500000, current:0, unit:'₪' },
+        { id:uid(), title:'50K עוקבות', period:'annual', target:50000, current:34000, unit:'עוקבות' },
+        { id:uid(), title:'400 חברות מועדון', period:'annual', target:400, current:0, unit:'חברות' },
       ]
     };
 
