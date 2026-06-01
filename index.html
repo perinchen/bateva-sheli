@@ -511,6 +511,27 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
         <div id="morning-cal-events"></div>
       </div>
 
+      <!-- Morning routine -->
+      <div class="card" style="background:var(--green-pale);border:1px solid var(--green-light);">
+        <div class="flex-between" style="margin-bottom:10px;">
+          <div class="card-title" style="margin:0;">🌅 שגרת הבוקר שלי</div>
+          <button onclick="toggleRoutine()" style="background:none;border:none;color:var(--green);font-size:12px;cursor:pointer;font-family:Heebo,sans-serif;font-weight:700;" id="routine-toggle">הצג</button>
+        </div>
+        <div id="routine-steps" style="display:none;">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="tag tag-time">🙏 נטילת ידיים</span>
+            <span class="tag tag-time">🦷 שיניים</span>
+            <span class="tag tag-time">🥥 קוקוס</span>
+            <span class="tag tag-time">💆 פנים</span>
+            <span class="tag tag-time">✋ עיסוי</span>
+            <span class="tag tag-time">💧 מים</span>
+            <span class="tag tag-time">🙌 ברכה</span>
+            <span class="tag tag-time">💫 אמונות מזמנות</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">20 דקות הכל — ואז אינסטגרם אם יש מה להעלות</p>
+        </div>
+      </div>
+
       <!-- Intention -->
       <div class="card">
         <div class="card-title">✨ הכוונה שלי להיום</div>
@@ -669,6 +690,7 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
         <button class="plan-tab active" onclick="showPlanTab('projects',this)">🏗️ פרויקטים</button>
         <button class="plan-tab" onclick="showPlanTab('marketing',this)">📣 שיווק</button>
         <button class="plan-tab" onclick="showPlanTab('content',this)">💡 רעיונות</button>
+        <button class="plan-tab" onclick="showPlanTab('learning',this)">📚 למידה</button>
       </div>
 
       <!-- Projects tab -->
@@ -699,6 +721,31 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
           </select>
         </div>
         <button class="btn btn-secondary btn-sm mt-8" onclick="addContentIdea()">+ הוסיפי רעיון</button>
+      </div>
+
+      <!-- Learning tab -->
+      <div id="plan-learning" style="display:none">
+        <div class="filter-bar" style="margin-bottom:12px;">
+          <button class="filter-chip fc-business" onclick="filterLearning('all',this)" style="background:var(--green);color:#fff;border-color:var(--green);" id="learn-filter-all">הכל</button>
+          <button class="filter-chip" onclick="filterLearning('course',this)" id="learn-filter-course">🎓 קורס</button>
+          <button class="filter-chip" onclick="filterLearning('book',this)" id="learn-filter-book">📖 ספר</button>
+          <button class="filter-chip" onclick="filterLearning('podcast',this)" id="learn-filter-podcast">🎙️ פודקאסט</button>
+          <button class="filter-chip" onclick="filterLearning('video',this)" id="learn-filter-video">🎬 וידאו</button>
+        </div>
+        <div id="learning-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input class="input" id="new-learn-input" placeholder="שם הקורס/ספר/פודקאסט..." style="flex:1">
+          <select class="select" id="new-learn-type" style="width:90px;padding:10px 8px;font-size:13px;">
+            <option value="course">🎓 קורס</option>
+            <option value="book">📖 ספר</option>
+            <option value="podcast">🎙️ פודקאסט</option>
+            <option value="video">🎬 וידאו</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input class="input" id="new-learn-author" placeholder="מי מעביר? (אופציונלי)" style="flex:1">
+          <button class="btn btn-secondary btn-sm" onclick="addLearningItem()" style="white-space:nowrap">+ הוסיפי</button>
+        </div>
       </div>
     </div><!-- /plan -->
 
@@ -1888,9 +1935,10 @@ function renderPlan() {
 }
 
 function showPlanTab(tab, btn) {
-  ['projects','marketing','content'].forEach(t => {
+  ['projects','marketing','content','learning'].forEach(t => {
     document.getElementById('plan-' + t).style.display = t === tab ? 'block' : 'none';
   });
+  if (tab === 'learning') renderLearning(getState());
   document.querySelectorAll('.plan-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -1989,6 +2037,84 @@ function saveMarketingPost() {
 function deleteMarketingPost(id) {
   updateState(state => { state.marketingPlan = (state.marketingPlan||[]).filter(p => p.id !== id); return state; });
   renderPlan();
+}
+
+function toggleRoutine() {
+  const el = document.getElementById('routine-steps');
+  const btn = document.getElementById('routine-toggle');
+  const shown = el.style.display !== 'none';
+  el.style.display = shown ? 'none' : 'block';
+  btn.textContent = shown ? 'הצג' : 'הסתר';
+}
+
+let currentLearnFilter = 'all';
+function filterLearning(type, btn) {
+  currentLearnFilter = type;
+  document.querySelectorAll('[id^="learn-filter-"]').forEach(b => {
+    b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
+  });
+  btn.style.background = 'var(--green)';
+  btn.style.color = '#fff';
+  btn.style.borderColor = 'var(--green)';
+  renderLearning(getState());
+}
+
+const LEARN_EMOJI = { course:'🎓', book:'📖', podcast:'🎙️', video:'🎬' };
+const LEARN_STATUS = { want:'רוצה', in_progress:'בתהליך', done:'סיימתי ✅' };
+
+function renderLearning(state) {
+  const items = (state.learningItems||[]).filter(i => currentLearnFilter === 'all' || i.type === currentLearnFilter);
+  const el = document.getElementById('learning-list');
+  if (!el) return;
+  el.innerHTML = items.length ? items.map(i => `
+    <div class="content-idea" style="flex-direction:column;align-items:flex-start;gap:6px;padding:12px 14px;">
+      <div style="display:flex;align-items:center;gap:10px;width:100%;">
+        <span style="font-size:20px;">${LEARN_EMOJI[i.type]||'📚'}</span>
+        <div style="flex:1;">
+          <div class="idea-title" style="font-size:14px;font-weight:700;">${esc(i.title)}</div>
+          ${i.author ? `<div style="font-size:12px;color:var(--text-muted);">${esc(i.author)}</div>` : ''}
+        </div>
+        <select style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;background:var(--surface);" onchange="updateLearnStatus('${i.id}',this.value)">
+          <option value="want" ${i.status==='want'?'selected':''}>רוצה</option>
+          <option value="in_progress" ${i.status==='in_progress'?'selected':''}>בתהליך</option>
+          <option value="done" ${i.status==='done'?'selected':''}>סיימתי ✅</option>
+        </select>
+        <button class="idea-del" onclick="deleteLearningItem('${i.id}')">✕</button>
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="emoji">📚</div><p>הוסיפי קורסים, ספרים ופודקאסטים</p></div>';
+}
+
+function addLearningItem() {
+  const title = document.getElementById('new-learn-input').value.trim();
+  if (!title) { toast('כתבי שם'); return; }
+  updateState(state => {
+    if (!state.learningItems) state.learningItems = [];
+    state.learningItems.push({
+      id: uid(), title,
+      type: document.getElementById('new-learn-type').value,
+      author: document.getElementById('new-learn-author').value.trim(),
+      status: 'want'
+    });
+    return state;
+  });
+  document.getElementById('new-learn-input').value = '';
+  document.getElementById('new-learn-author').value = '';
+  renderLearning(getState());
+  toast('📚 נוסף לרשימת הלמידה!');
+}
+
+function updateLearnStatus(id, status) {
+  updateState(state => {
+    const item = (state.learningItems||[]).find(i => i.id === id);
+    if (item) item.status = status;
+    return state;
+  });
+}
+
+function deleteLearningItem(id) {
+  updateState(state => { state.learningItems = (state.learningItems||[]).filter(i => i.id !== id); return state; });
+  renderLearning(getState());
 }
 
 function renderContentIdeas(state) {
@@ -2428,9 +2554,8 @@ function overlayClose(e, id) {
 // ================================================================
 function loadInitialData() {
   const state = getState();
-  // Version 1: first load. Version 2: adds notes tasks + mantras
   const currentVersion = state.dataVersion || 0;
-  if (currentVersion >= 2) return;
+  if (currentVersion >= 3) return;
   const isFirstLoad = currentVersion === 0;
 
   const T = todayStr();
@@ -2586,27 +2711,83 @@ function loadInitialData() {
     'כשאני משחררת ומרפה — כל השפע והכסף והטוב זורם אליי בקלות',
   ];
 
+  // v3 additions
+  const v3Tasks = [
+    { id:uid(), title:'לסדר לוז שבועי קבוע: אימון, רפלקסולוגיה, זמן עבודה', priority:'week', categories:['personal'], category:'personal', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לבדוק כל לינקים באוטומציות שזה הלינק הנכון', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לבנות פאנל Evergreen: ריל > הדרכה קצרה > מייל תודה > קישור לקורס', priority:'week', categories:['business'], category:'business', estimatedMinutes:120, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'ליצור ערכת אטופיק: שמן אמבט + ערכה', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להוסיף וידאויים לכל דפי נחיתה ודפי תודה', priority:'wait', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לשנות לינקים דר אמא + הדרכות (אצל איתן)', priority:'fire', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+    { id:uid(), title:'מייל הפוך תולעים — לשלוח לאיתן', priority:'week', categories:['business'], category:'business', estimatedMinutes:15, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לפתוח ביקורות במוצרים באתר (יוליה)', priority:'week', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לסדר תפריט אתר + באנרים בקטגוריות (יוליה)', priority:'wait', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להוסיף אוטומציה לרולר לבנדר', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לעבור על כל הקורסים (ילד בריא) — רשימה מה נכנס למועדון', priority:'wait', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להוריד הקלטת וובינר ולהעלות לאתר', priority:'wait', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'מכבי טבעי — להתקשר ולברר החזרים', priority:'wait', categories:['personal'], category:'personal', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+  ];
+
+  const v3ContentIdeas = [
+    { id:uid(), title:'הוקים לרילסים: "מתי הכי נכון להוריד חום לילדים"', type:'reel', status:'idea' },
+    { id:uid(), title:'הוקים: "אל תשלחו ילד לגן לפני 3 הדברים האלה (מחזקת, אל גרד, כינים)"', type:'reel', status:'idea' },
+    { id:uid(), title:'ריל: "מה לארוז לחדר לידה — שמנים אתרים שמפרישים אוקסיטוצין"', type:'reel', status:'idea' },
+    { id:uid(), title:'פוסט: שקרים שאמהות אומרות (לגינה, לאוכל, לשכן)', type:'post', status:'idea' },
+    { id:uid(), title:'ריל: יום בהריון ראשון vs הריון שלישי', type:'reel', status:'idea' },
+    { id:uid(), title:'ריל: להיות אמא ל-3 — מה האתגר הכי גדול?', type:'reel', status:'idea' },
+    { id:uid(), title:'ריל: כאבי גזים — השיטה שמשנה כל הכללים', type:'reel', status:'idea' },
+    { id:uid(), title:'פוסט: ברזל אצל תינוקות — כן לא ואיזה מאכלים', type:'post', status:'idea' },
+    { id:uid(), title:'ריל: תרגילי התפתחות והתהפכות לתינוקות', type:'reel', status:'idea' },
+    { id:uid(), title:'קרוסלה: מדריך חינמי — כל מה שצריך לדעת שהילד חולה', type:'carousel', status:'idea' },
+    { id:uid(), title:'ריל: לופאמפ — לשאוב בזמן ניקיון/בישול/ילדים', type:'reel', status:'idea' },
+    { id:uid(), title:'פוסט: ההבדל בין חלב אמא, חלב שקדים וחלב פרה — מה לבחור', type:'post', status:'idea' },
+    { id:uid(), title:'פוסט: הנקה ילד ראשון מול ילד שלישי', type:'post', status:'idea' },
+    { id:uid(), title:'ריל: קרחת לילדה — הכלל הדרין', type:'reel', status:'idea' },
+    { id:uid(), title:'פוסט: ריסוסים בשמיים — מה אנחנו יכולות לעשות', type:'post', status:'idea' },
+  ];
+
+  const learningItems = [
+    { id:uid(), title:'קלוד קוד — הדרכה של יהב', type:'video', author:'יהב', status:'want' },
+    { id:uid(), title:'יהב — Google ו-AI', type:'course', author:'יהב', status:'want' },
+    { id:uid(), title:'תוכנית 21 יום', type:'course', author:'מעין בן ציון', status:'want' },
+    { id:uid(), title:'תוכנית כסף', type:'course', author:'מעין בן ציון', status:'want' },
+    { id:uid(), title:'קורס נשים', type:'course', author:'', status:'want' },
+    { id:uid(), title:'קורס ילדים', type:'course', author:'', status:'want' },
+    { id:uid(), title:'קריאה + יישום', type:'book', author:'גפן הלוי', status:'want' },
+    { id:uid(), title:'הורות והיקשרות — ילדים רגישים', type:'course', author:'נורית', status:'want' },
+    { id:uid(), title:'זוגיות', type:'course', author:'ענת זליג', status:'want' },
+    { id:uid(), title:'משחק הכסף', type:'book', author:'רם שכטר', status:'want' },
+    { id:uid(), title:'אמא מאמנת', type:'course', author:'', status:'want' },
+    { id:uid(), title:'נמרולוגיה', type:'course', author:'', status:'want' },
+  ];
+
   updateState(st => {
+    const existingTitles = new Set((st.tasks||[]).map(t=>t.title));
+    const newTasks = [...(isFirstLoad ? [...tasks, ...noteTasks] : noteTasks), ...v3Tasks]
+      .filter(t => !existingTitles.has(t.title));
+    st.tasks = isFirstLoad ? newTasks : [...(st.tasks||[]), ...v3Tasks.filter(t => !existingTitles.has(t.title))];
+
     if (isFirstLoad) {
-      st.tasks = [...tasks, ...noteTasks];
       st.projects = projects;
       st.mantras = [...mantras, ...noteMantras];
       st.weeklyGoals = weeklyGoals;
       st.goals = goals;
-      st.contentIdeas = contentIdeas;
       st.financials = { monthlyGoal:15000, entries:{} };
     } else {
-      // v1→v2: add only new data, don't overwrite existing
-      const existingTitles = new Set((st.tasks||[]).map(t=>t.title));
-      const newTasks = noteTasks.filter(t => !existingTitles.has(t.title));
-      st.tasks = [...(st.tasks||[]), ...newTasks];
-      const existingIdeas = new Set((st.contentIdeas||[]).map(i=>i.title));
-      const newIdeas = contentIdeas.filter(i => !existingIdeas.has(i.title));
-      st.contentIdeas = [...(st.contentIdeas||[]), ...newIdeas];
       const existingMantras = new Set(st.mantras||[]);
-      noteMantras.forEach(m => { if (!existingMantras.has(m)) (st.mantras||[]).push(m); });
+      noteMantras.forEach(m => { if (!existingMantras.has(m)) (st.mantras=st.mantras||[]).push(m); });
     }
-    st.dataVersion = 2;
+
+    // Always merge content ideas
+    const existingIdeas = new Set((st.contentIdeas||[]).map(i=>i.title));
+    const allNewIdeas = isFirstLoad ? [...contentIdeas, ...v3ContentIdeas] : [...v3ContentIdeas];
+    st.contentIdeas = [...(st.contentIdeas||[]), ...allNewIdeas.filter(i => !existingIdeas.has(i.title))];
+
+    // Add learning items (always)
+    const existingLearn = new Set((st.learningItems||[]).map(i=>i.title));
+    st.learningItems = [...(st.learningItems||[]), ...learningItems.filter(i => !existingLearn.has(i.title))];
+
+    st.dataVersion = 3;
     return st;
   });
 }
