@@ -700,6 +700,7 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
         <div class="finance-bar">
           <div class="finance-fill" id="finance-fill" style="width:0%"></div>
         </div>
+        <div id="finance-annual"></div>
         <div style="margin-top:12px; display:flex; gap:8px;">
           <input type="number" class="input" id="finance-input" placeholder="הוסיפי הכנסה..." style="flex:1; padding:8px 12px; font-size:14px; background:rgba(255,255,255,.15); border-color:rgba(255,255,255,.3); color:#fff;">
           <button class="btn btn-secondary btn-sm" onclick="addIncome()" style="white-space:nowrap">+ הוסיפי</button>
@@ -2144,12 +2145,33 @@ function renderFinancials(state) {
   const actual = Object.entries(entries)
     .filter(([k]) => k.startsWith(monthKey))
     .reduce((s,[,v]) => s+v, 0);
-  const goal = state.settings.monthlyGoal || fin.monthlyGoal || 15000;
+
+  // Use month-specific target if available
+  const targets = fin.monthlyTargets || {};
+  const goal = targets[monthKey] || state.settings.monthlyGoal || fin.monthlyGoal || 15000;
   const pct = goal ? Math.min(Math.round(actual/goal*100),100) : 0;
+  const remaining = Math.max(0, goal - actual);
+
+  // Annual progress
+  const yearActual = Object.entries(entries).reduce((s,[,v]) => s+v, 0) + 303514; // כולל ינואר-מאי
+  const yearGoal = 1500000;
+  const yearPct = Math.min(Math.round(yearActual/yearGoal*100), 100);
 
   document.getElementById('finance-amount').textContent = '₪' + actual.toLocaleString('he-IL');
-  document.getElementById('finance-goal').textContent = 'מתוך יעד ₪' + goal.toLocaleString('he-IL') + ' — ' + pct + '%';
+  document.getElementById('finance-goal').textContent =
+    'יעד ' + monthKey.slice(5) + ': ₪' + goal.toLocaleString('he-IL') + ' · נשאר ₪' + remaining.toLocaleString('he-IL');
   document.getElementById('finance-fill').style.width = pct + '%';
+
+  // Show annual progress below
+  const annualEl = document.getElementById('finance-annual');
+  if (annualEl) {
+    annualEl.innerHTML = `<div style="margin-top:12px;opacity:.8;">
+      <div style="font-size:12px;color:var(--green-light);margin-bottom:4px;">שנתי: ₪${yearActual.toLocaleString()} מתוך ₪1,500,000 (${yearPct}%)</div>
+      <div style="height:6px;background:rgba(255,255,255,.2);border-radius:100px;overflow:hidden;">
+        <div style="height:100%;width:${yearPct}%;background:rgba(255,255,255,.7);border-radius:100px;"></div>
+      </div>
+    </div>`;
+  }
 }
 
 function addIncome() {
@@ -3006,7 +3028,7 @@ function overlayClose(e, id) {
 function loadInitialData() {
   const state = getState();
   const currentVersion = state.dataVersion || 0;
-  if (currentVersion >= 3) return;
+  if (currentVersion >= 4) return;
   const isFirstLoad = currentVersion === 0;
 
   const T = todayStr();
@@ -3238,7 +3260,50 @@ function loadInitialData() {
     const existingLearn = new Set((st.learningItems||[]).map(i=>i.title));
     st.learningItems = [...(st.learningItems||[]), ...learningItems.filter(i => !existingLearn.has(i.title))];
 
-    st.dataVersion = 3;
+    // v4: real 2026 revenue targets + monthly breakdown
+    const v4Goals = {
+      monthly: [
+        { id:uid(), title:'הכנסה — יוני 2026', period:'monthly', target:150000, current:0, unit:'₪', month:'2026-06' },
+        { id:uid(), title:'הכנסה — יולי 2026',  period:'monthly', target:150000, current:0, unit:'₪', month:'2026-07' },
+        { id:uid(), title:'הכנסה — אוגוסט 2026',period:'monthly', target:150000, current:0, unit:'₪', month:'2026-08' },
+        { id:uid(), title:'הכנסה — ספטמבר 2026',period:'monthly', target:200000, current:0, unit:'₪', month:'2026-09' },
+        { id:uid(), title:'הכנסה — אוקטובר 2026',period:'monthly', target:250000, current:0, unit:'₪', month:'2026-10' },
+        { id:uid(), title:'הכנסה — נובמבר 2026', period:'monthly', target:300000, current:0, unit:'₪', month:'2026-11' },
+        { id:uid(), title:'הכנסה — דצמבר 2026',  period:'monthly', target:300000, current:0, unit:'₪', month:'2026-12' },
+        { id:uid(), title:'פוסטים לאינסטגרם', period:'monthly', target:12, current:0, unit:'פוסטים' },
+        { id:uid(), title:'גייסות למועדון', period:'monthly', target:50, current:0, unit:'חברות' },
+      ],
+      quarterly: [
+        { id:uid(), title:'הכנסה Q3 2026 (יולי-ספטמבר)', period:'quarterly', target:500000, current:0, unit:'₪' },
+        { id:uid(), title:'הכנסה Q4 2026 (אוקטובר-דצמבר)', period:'quarterly', target:850000, current:0, unit:'₪' },
+        { id:uid(), title:'עוקבות אינסטגרם', period:'quarterly', target:38000, current:34000, unit:'עוקבות' },
+        { id:uid(), title:'חברות מועדון', period:'quarterly', target:200, current:0, unit:'חברות' },
+        { id:uid(), title:'השקת מועדון מלא', period:'quarterly', target:1, current:0, unit:'✓' },
+      ],
+      annual: [
+        { id:uid(), title:'הכנסה שנתית 2026 (נטו אחרי מעמ)', period:'annual', target:1500000, current:303514, unit:'₪' },
+        { id:uid(), title:'רווח שנתי (30% ממחזור)', period:'annual', target:500000, current:0, unit:'₪' },
+        { id:uid(), title:'50K עוקבות אינסטגרם', period:'annual', target:50000, current:34000, unit:'עוקבות' },
+        { id:uid(), title:'חברות מועדון פעילות', period:'annual', target:400, current:0, unit:'חברות' },
+      ]
+    };
+
+    // Merge: add new goals without duplicating
+    ['monthly','quarterly','annual'].forEach(period => {
+      const existingTitles = new Set((st.goals[period]||[]).map(g=>g.title));
+      const newGoals = v4Goals[period].filter(g => !existingTitles.has(g.title));
+      st.goals[period] = [...newGoals, ...(st.goals[period]||[])]; // חדשים למעלה
+    });
+
+    // Update financial goal
+    st.financials = st.financials || {};
+    st.financials.monthlyGoal = 150000; // יוני
+    st.financials.monthlyTargets = {
+      '2026-06': 150000, '2026-07': 150000, '2026-08': 150000,
+      '2026-09': 200000, '2026-10': 250000, '2026-11': 300000, '2026-12': 300000
+    };
+
+    st.dataVersion = 4;
     return st;
   });
 }
