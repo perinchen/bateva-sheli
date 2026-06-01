@@ -2428,7 +2428,10 @@ function overlayClose(e, id) {
 // ================================================================
 function loadInitialData() {
   const state = getState();
-  if ((state.tasks||[]).length > 0) return; // כבר יש נתונים
+  // Version 1: first load. Version 2: adds notes tasks + mantras
+  const currentVersion = state.dataVersion || 0;
+  if (currentVersion >= 2) return;
+  const isFirstLoad = currentVersion === 0;
 
   const T = todayStr();
   const tasks = [
@@ -2524,16 +2527,86 @@ function loadInitialData() {
     { id:uid(), title:'הבדל בין שמן מדולל לטהור', type:'carousel', status:'idea' },
     { id:uid(), title:'שגרת בוקר בריאה לילדים', type:'post', status:'idea' },
     { id:uid(), title:'תגובות אמהות + הוכחות חברתיות', type:'carousel', status:'idea' },
+    // מהפתקים:
+    { id:uid(), title:'מה להביא לילד שנולד לו אח', type:'post', status:'idea' },
+    { id:uid(), title:'איך להכין ספריי ניקוי טבעי לאייפון ומשטחים', type:'reel', status:'idea' },
+    { id:uid(), title:'לנשום עמוק — מוריד סטרס (לחבר להנקה)', type:'reel', status:'idea' },
+    { id:uid(), title:'הנשכן החדש — שלב ההתפתחות של הפה', type:'reel', status:'idea' },
+    { id:uid(), title:'עיסוי תינוקות מלא — לרשום ולשלוח', type:'carousel', status:'idea' },
+    { id:uid(), title:'ריסוסים בשמיים — מה אנחנו יכולות לעשות', type:'post', status:'idea' },
+    { id:uid(), title:'מאיזה גיל נעודד עצמאות?', type:'post', status:'idea' },
+    { id:uid(), title:'הנשירה של אחרי הלידה — מה זה ולמה', type:'reel', status:'idea' },
+    { id:uid(), title:'לבעל — מה אמא צריכה ממך אחרי לידה', type:'post', status:'idea' },
+    { id:uid(), title:'ריל עם מונדדו — למה חיתול טבעי', type:'reel', status:'idea' },
+    { id:uid(), title:'פוסט קרוסלה: מה קורה לאמא בכל לידה', type:'carousel', status:'idea' },
+    { id:uid(), title:'תוכן ניובורן — להכין PDF הדרכה מהפתקים', type:'post', status:'idea' },
+    { id:uid(), title:'מארז קיץ — סטורי ממומן', type:'story', status:'idea' },
+    { id:uid(), title:'מארז נסיעות — סטורי ממומן', type:'story', status:'idea' },
+  ];
+
+  // Tasks from notes (added in v2)
+  const noteTasks = [
+    // 🔴 בוערות
+    { id:uid(), title:'לדבר עם מוחמד — שמנים ותערובות + לשלוח הזמנה', priority:'fire', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+    { id:uid(), title:'להעלות פוסט עובדת חדשה לאיירהוס', priority:'fire', categories:['content'], category:'content', estimatedMinutes:15, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+
+    // 🟡 השבוע — עסק
+    { id:uid(), title:'לשלוח ליוליה: מדריך כאבי אוזניים + מדריך שניים', priority:'week', categories:['business'], category:'business', estimatedMinutes:10, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לדבר עם איתן: 3 מיילים למועדון + רשימת אוטומציות לדייק', priority:'week', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'להכין 3 מיילים אחרי רכישת דר אמא — לשלוח לאיתן', priority:'week', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'קמפיין כאבי אוזניים — ישר לרכישה בלי דף נחיתה', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לחדד ממומן ד"ר אמא — לדייק את הדל או לשנות ללינק אחר', priority:'week', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לעלות 3 המדריכים (APL) לד"ר אמא', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לשנות מדבקה ולשלוח ליקיר (ספק)', priority:'week', categories:['business'], category:'business', estimatedMinutes:15, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לעבור על כל האוטומציות — לשנות תמונת אינסטגרם ולדייק', priority:'week', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'הייליט + ביו לינק מועדון + באנר בדף הבית', priority:'week', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'קמפיין תולעים: לשלש ממומן + להוסיף קורס מעגל התולעים', priority:'week', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+
+    // 🟡 השבוע — תוכן
+    { id:uid(), title:'לצלם רוי: שכיבה, החלפת חיתול, תרגילי בוקר, עיסוי בטן', priority:'week', categories:['content'], category:'content', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לצלם לופאמפ: בזמן ניקיון, אכילה, עם הילדים', priority:'week', categories:['content'], category:'content', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+
+    // ⚪ ממתין
+    { id:uid(), title:'הזמנה גדולה ממוחמד: אל גרד 2000, תערובות, הוקלי ועוד', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'קמפיין תערובת מחזקת לקיץ', priority:'wait', categories:['business'], category:'business', estimatedMinutes:90, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'קמפיין מוצרים פיזיים בסט סלר (עם המחזקת?)', priority:'wait', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'לפרסם לשתפיות — AffiliateWP עמלה', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'תוכן ניובורן + הכנה ללידה — להכין PDF ואולי מאסטרקלאס', priority:'wait', categories:['content','business'], category:'content', estimatedMinutes:120, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+    { id:uid(), title:'מארז 3 מוצרים ₪349+ — להכין ולשלוח לאיתן', priority:'wait', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:null, createdAt:T },
+  ];
+
+  // Mantras from notes
+  const noteMantras = [
+    'יש בי עוצמה עדינה, עוצמה רגועה — אני אמיצה',
+    'אני מאמינה בגוף שלי, אני באמונה בבורא, אני רגועה',
+    'אני אהובה, אני ראויה, אני בריאה — הנפש שלי בריאה ומאושרת',
+    'הגוף שלי חזק ובריא, כל מערכות הגוף שלי עובדות בצורה תקינה',
+    'איזה כיף לי שיש לי המון שפע וכסף להגשים את כל החלומות שלי',
+    'אני בשליחות שלי ועוזרת לאחרים עם זה — זה מה שאני נולדתי לעשות',
+    'כשאני משחררת ומרפה — כל השפע והכסף והטוב זורם אליי בקלות',
   ];
 
   updateState(st => {
-    st.tasks = tasks;
-    st.projects = projects;
-    st.mantras = mantras;
-    st.weeklyGoals = weeklyGoals;
-    st.goals = goals;
-    st.contentIdeas = contentIdeas;
-    st.financials = { monthlyGoal:15000, entries:{} };
+    if (isFirstLoad) {
+      st.tasks = [...tasks, ...noteTasks];
+      st.projects = projects;
+      st.mantras = [...mantras, ...noteMantras];
+      st.weeklyGoals = weeklyGoals;
+      st.goals = goals;
+      st.contentIdeas = contentIdeas;
+      st.financials = { monthlyGoal:15000, entries:{} };
+    } else {
+      // v1→v2: add only new data, don't overwrite existing
+      const existingTitles = new Set((st.tasks||[]).map(t=>t.title));
+      const newTasks = noteTasks.filter(t => !existingTitles.has(t.title));
+      st.tasks = [...(st.tasks||[]), ...newTasks];
+      const existingIdeas = new Set((st.contentIdeas||[]).map(i=>i.title));
+      const newIdeas = contentIdeas.filter(i => !existingIdeas.has(i.title));
+      st.contentIdeas = [...(st.contentIdeas||[]), ...newIdeas];
+      const existingMantras = new Set(st.mantras||[]);
+      noteMantras.forEach(m => { if (!existingMantras.has(m)) (st.mantras||[]).push(m); });
+    }
+    st.dataVersion = 2;
     return st;
   });
 }
