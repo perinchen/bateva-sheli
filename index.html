@@ -139,6 +139,21 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
 .badge-wait { background:var(--wait-bg); color:var(--text-muted); }
 .badge-green { background:var(--green-light); color:var(--green); }
 
+/* MILESTONE */
+.milestone-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--radius-sm); margin-bottom:8px; border-right:4px solid var(--green); background:var(--green-pale); }
+.milestone-date { font-size:13px; font-weight:700; color:var(--green); min-width:50px; }
+.milestone-title { font-size:14px; font-weight:700; flex:1; }
+.milestone-badge { font-size:11px; padding:2px 8px; border-radius:100px; background:var(--green); color:#fff; }
+
+/* TIMELINE */
+.timeline-day { margin-bottom:16px; }
+.timeline-day-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.timeline-date-bubble { width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; }
+.timeline-date-bubble.today { background:var(--fire); }
+.timeline-date-bubble.past { background:var(--text-muted); }
+.timeline-day-label { font-size:13px; font-weight:700; color:var(--text-muted); }
+.timeline-day-tasks { padding-right:46px; }
+
 /* EDIT BUTTON */
 .edit-btn { background:none; border:none; color:#ccc; font-size:14px; cursor:pointer; padding:4px 2px; flex-shrink:0; transition:color .15s; }
 .edit-btn:hover { color:var(--green); }
@@ -734,10 +749,38 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
     <!-- PLAN SCREEN -->
     <div id="s-plan" class="screen">
       <div class="plan-tabs">
-        <button class="plan-tab active" onclick="showPlanTab('projects',this)">🏗️ פרויקטים</button>
+        <button class="plan-tab active" onclick="showPlanTab('macro',this)">🗓️ מאקרו</button>
+        <button class="plan-tab" onclick="showPlanTab('projects',this)">🏗️ פרויקטים</button>
         <button class="plan-tab" onclick="showPlanTab('marketing',this)">📣 שיווק</button>
         <button class="plan-tab" onclick="showPlanTab('content',this)">💡 רעיונות</button>
         <button class="plan-tab" onclick="showPlanTab('learning',this)">📚 למידה</button>
+      </div>
+
+      <!-- MACRO MONTHLY VIEW -->
+      <div id="plan-macro">
+        <div class="flex-between" style="margin-bottom:12px;">
+          <span id="macro-month-label" style="font-size:16px;font-weight:900;color:var(--green);"></span>
+          <div style="display:flex;gap:6px;">
+            <button class="icon-btn" onclick="changeMacroMonth(-1)">◀</button>
+            <button class="btn btn-sm btn-ghost" onclick="resetMacroMonth()">עכשיו</button>
+            <button class="icon-btn" onclick="changeMacroMonth(1)">▶</button>
+          </div>
+        </div>
+
+        <!-- Milestones row -->
+        <div class="card" style="padding:14px;margin-bottom:12px;">
+          <div class="flex-between" style="margin-bottom:10px;">
+            <div class="card-title" style="margin:0;">🎯 אירועי המפתח</div>
+            <button class="btn btn-sm btn-secondary" onclick="openMilestoneEditor()">+ הוסיפי</button>
+          </div>
+          <div id="milestones-list"></div>
+        </div>
+
+        <!-- Monthly task timeline -->
+        <div class="card" style="padding:14px;">
+          <div class="card-title">📋 כל המשימות לחודש — לפי תאריך</div>
+          <div id="macro-tasks-timeline"></div>
+        </div>
       </div>
 
       <!-- Projects tab -->
@@ -1011,6 +1054,46 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
     </div>
 
     <button class="btn btn-primary btn-full" onclick="saveEvening()">💾 שמרי ולילה טוב ♥</button>
+  </div>
+</div>
+
+<!-- MODAL: MILESTONE -->
+<div class="modal-overlay" id="modal-milestone" onclick="overlayClose(event,'modal-milestone')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="flex-between">
+      <div class="modal-title">🎯 אירוע / השקה</div>
+      <button class="modal-close" onclick="closeModal('modal-milestone')">✕</button>
+    </div>
+    <input type="hidden" id="ms-edit-id">
+    <div class="form-group">
+      <label class="form-label">שם האירוע</label>
+      <input class="input" id="ms-title" placeholder="למשל: יומולדת דניאל — מבצע 48 שעות">
+    </div>
+    <div class="form-group">
+      <label class="form-label">תאריך</label>
+      <input class="input" id="ms-date" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">סוג</label>
+      <select class="select" id="ms-type">
+        <option value="launch">🚀 השקה</option>
+        <option value="sale">🔥 מבצע</option>
+        <option value="personal">🎂 אישי</option>
+        <option value="campaign">📣 קמפיין</option>
+        <option value="deadline">⏰ דד-ליין</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">הכנה נדרשת (ימים לפני)</label>
+      <select class="select" id="ms-prep">
+        <option value="7">שבוע מראש</option>
+        <option value="14">שבועיים מראש</option>
+        <option value="3">3 ימים מראש</option>
+        <option value="0">ללא</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveMilestone()">💾 שמרי + פרקי משימות</button>
   </div>
 </div>
 
@@ -2294,12 +2377,13 @@ function deleteGoal(id, period) {
 function renderPlan() {
   const state = getState();
   document.getElementById('marketing-month').textContent = formatMonthHe(new Date());
+  renderMacro();
   renderProjects(state);
   renderMarketingCal(state);
   renderContentIdeas(state);
 }
 
-function showPlanTab(tab, btn) {
+function _OLD_showPlanTab(tab, btn) {
   ['projects','marketing','content','learning'].forEach(t => {
     document.getElementById('plan-' + t).style.display = t === tab ? 'block' : 'none';
   });
@@ -2402,6 +2486,180 @@ function saveMarketingPost() {
 function deleteMarketingPost(id) {
   updateState(state => { state.marketingPlan = (state.marketingPlan||[]).filter(p => p.id !== id); return state; });
   renderPlan();
+}
+
+// ================================================================
+// MACRO MONTHLY PLAN
+// ================================================================
+let macroMonthOffset = 0;
+
+function getMacroMonth() {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + macroMonthOffset);
+  return d;
+}
+
+function changeMacroMonth(dir) { macroMonthOffset += dir; renderMacro(); }
+function resetMacroMonth() { macroMonthOffset = 0; renderMacro(); }
+
+function renderMacro() {
+  const state = getState();
+  const d = getMacroMonth();
+  const monthKey = d.toISOString().slice(0,7);
+  document.getElementById('macro-month-label').textContent = formatMonthHe(d);
+
+  // Milestones
+  const milestones = (state.milestones||[]).filter(m => m.date && m.date.startsWith(monthKey));
+  milestones.sort((a,b) => a.date.localeCompare(b.date));
+  const MS_EMOJI = { launch:'🚀', sale:'🔥', personal:'🎂', campaign:'📣', deadline:'⏰' };
+  document.getElementById('milestones-list').innerHTML = milestones.length
+    ? milestones.map(m => `
+        <div class="milestone-item">
+          <span class="milestone-date">${m.date.slice(8)}/${m.date.slice(5,7)}</span>
+          <span class="milestone-title">${MS_EMOJI[m.type]||'📌'} ${esc(m.title)}</span>
+          <button class="edit-btn" onclick="editMilestone('${m.id}')">✏️</button>
+          <button class="idea-del" onclick="deleteMilestone('${m.id}')">✕</button>
+        </div>
+      `).join('')
+    : '<p class="text-muted" style="padding:8px;font-size:14px;">אין אירועים — הוסיפי השקה, מבצע או יומולדת</p>';
+
+  // Timeline: tasks with scheduledDate or dueDate in this month
+  const tasks = (state.tasks||[]).filter(t => {
+    const d = t.scheduledDate || t.dueDate;
+    return d && d.startsWith(monthKey);
+  });
+  const byDay = {};
+  tasks.forEach(t => {
+    const day = t.scheduledDate || t.dueDate;
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(t);
+  });
+
+  // Also add milestones as day markers
+  milestones.forEach(m => {
+    if (!byDay[m.date]) byDay[m.date] = [];
+  });
+
+  const todayKey = todayStr();
+  const sortedDays = Object.keys(byDay).sort();
+
+  document.getElementById('macro-tasks-timeline').innerHTML = sortedDays.length ? sortedDays.map(day => {
+    const dayTasks = byDay[day] || [];
+    const dayMilestone = milestones.find(m => m.date === day);
+    const isPast = day < todayKey;
+    const isToday = day === todayKey;
+    const dt = new Date(day + 'T12:00:00');
+    const dayLabel = hebrewDay(dt) + ' ' + dt.getDate() + '/' + (dt.getMonth()+1);
+
+    return `<div class="timeline-day">
+      <div class="timeline-day-header">
+        <div class="timeline-date-bubble ${isToday?'today':isPast?'past':''}">${dt.getDate()}</div>
+        <div>
+          <div class="timeline-day-label">${dayLabel}</div>
+          ${dayMilestone ? `<div style="font-size:11px;color:var(--fire);font-weight:700;">${MS_EMOJI[dayMilestone.type]||'📌'} ${esc(dayMilestone.title)}</div>` : ''}
+        </div>
+      </div>
+      <div class="timeline-day-tasks">
+        ${dayTasks.map(t => renderTaskItem(t)).join('') || ''}
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state"><div class="emoji">📋</div><p>אין משימות עם תאריכים לחודש זה</p></div>';
+}
+
+function openMilestoneEditor(id) {
+  const state = getState();
+  const m = id ? (state.milestones||[]).find(m=>m.id===id) : null;
+  document.getElementById('ms-edit-id').value = id || '';
+  document.getElementById('ms-title').value = m ? m.title : '';
+  document.getElementById('ms-date').value = m ? m.date : getMacroMonth().toISOString().slice(0,7) + '-01';
+  document.getElementById('ms-type').value = m ? m.type : 'launch';
+  document.getElementById('ms-prep').value = m ? (m.prepDays||7) : 7;
+  openModal('modal-milestone');
+}
+
+function editMilestone(id) { openMilestoneEditor(id); }
+
+function saveMilestone() {
+  const title = document.getElementById('ms-title').value.trim();
+  const date = document.getElementById('ms-date').value;
+  if (!title || !date) { toast('מלאי שם ותאריך'); return; }
+
+  const id = document.getElementById('ms-edit-id').value || uid();
+  const type = document.getElementById('ms-type').value;
+  const prepDays = parseInt(document.getElementById('ms-prep').value);
+
+  updateState(state => {
+    if (!state.milestones) state.milestones = [];
+    const existing = state.milestones.find(m=>m.id===id);
+    if (existing) { existing.title=title; existing.date=date; existing.type=type; existing.prepDays=prepDays; }
+    else state.milestones.unshift({ id, title, date, type, prepDays });
+    return state;
+  });
+
+  // Auto-generate prep tasks if it's a launch/sale
+  if (!document.getElementById('ms-edit-id').value && prepDays > 0 && (type==='launch'||type==='sale')) {
+    generatePrepTasks(id, title, date, prepDays);
+  }
+
+  closeModal('modal-milestone');
+  renderMacro();
+  toast('🎯 אירוע נשמר!');
+}
+
+function generatePrepTasks(milestoneId, title, eventDate, prepDays) {
+  const dt = new Date(eventDate + 'T12:00:00');
+  const T = todayStr();
+
+  const mkDate = (daysBack) => {
+    const d = new Date(dt);
+    d.setDate(d.getDate() - daysBack);
+    return d.toISOString().slice(0,10);
+  };
+
+  const prepTaskTemplates = [
+    { daysBack: prepDays,     title: `${title} — לתכנן: מה בדיוק מוצע, מחיר, משך`, cat:'business', mins:30 },
+    { daysBack: prepDays-1,   title: `${title} — לכתוב: קופי לדיוור + סטורי + פוסט`, cat:'content', mins:60 },
+    { daysBack: Math.ceil(prepDays*0.6), title: `${title} — להכין: קריאטיב (תמונה/וידאו לסטורי)`, cat:'content', mins:45 },
+    { daysBack: Math.ceil(prepDays*0.4), title: `${title} — לשלוח: דיוור + להפעיל מחיר מבצע באתר`, cat:'business', mins:30 },
+    { daysBack: 1,            title: `${title} — לבדוק: כל הלינקים, מחיר, קופון עובד`, cat:'business', mins:20 },
+    { daysBack: 0,            title: `${title} — יום האירוע: לעלות סטורי + לעקוב אחרי מכירות`, cat:'business', mins:30 },
+  ];
+
+  updateState(state => {
+    prepTaskTemplates.forEach(tmpl => {
+      const d = mkDate(tmpl.daysBack);
+      if (d < T) return; // skip past dates
+      state.tasks.unshift({
+        id: uid(), title: tmpl.title,
+        priority: tmpl.daysBack <= 2 ? 'fire' : 'week',
+        categories: [tmpl.cat], category: tmpl.cat,
+        estimatedMinutes: tmpl.mins, completed: false, completedAt: null,
+        parentId: milestoneId, scheduledDate: d, dueDate: d, createdAt: T
+      });
+    });
+    return state;
+  });
+}
+
+function deleteMilestone(id) {
+  if (!confirm('למחוק אירוע זה?')) return;
+  updateState(state => { state.milestones=(state.milestones||[]).filter(m=>m.id!==id); return state; });
+  renderMacro();
+}
+
+function showPlanTab(tab, btn) {
+  ['macro','projects','marketing','content','learning'].forEach(t => {
+    const el = document.getElementById('plan-'+t);
+    if (el) el.style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.plan-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (tab==='learning') renderLearning(getState());
+  if (tab==='content') renderContentIdeas(getState());
+  if (tab==='macro') renderMacro();
+  if (tab==='marketing') renderMarketingCal(getState());
+  if (tab==='projects') renderProjects(getState());
 }
 
 function toggleRoutine() {
@@ -3328,6 +3586,44 @@ function loadInitialData() {
       '2026-06': 150000, '2026-07': 150000, '2026-08': 150000,
       '2026-09': 200000, '2026-10': 250000, '2026-11': 300000, '2026-12': 300000
     };
+
+    // June milestones + backward-planned tasks
+    if (!st.milestones) st.milestones = [];
+    const juneMilestones = [
+      { id:'ms-moadon', title:'השקת מועדון בטבע שלך', date:'2026-06-07', type:'launch', prepDays:7 },
+      { id:'ms-daniel', title:'יומולדת דניאל — מבצע 48 שעות', date:'2026-06-15', type:'sale', prepDays:7 },
+      { id:'ms-guides', title:'3 מדריכים חדשים — השקה', date:'2026-06-20', type:'launch', prepDays:5 },
+      { id:'ms-campaigns', title:'קמפיינים פיזיים — כולם עולים', date:'2026-06-08', type:'campaign', prepDays:5 },
+    ];
+    const msExisting = new Set(st.milestones.map(m=>m.id));
+    juneMilestones.forEach(m => { if (!msExisting.has(m.id)) st.milestones.push(m); });
+
+    // Backward-planned tasks from milestones (only if they don't already exist)
+    const juneBackwardTasks = [
+      // מועדון launch June 7 (prep from June 1)
+      { id:uid(), title:'מועדון — לתכנן: מחיר מייסדות, דף נחיתה, הכרזה', priority:'fire', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:'ms-moadon', scheduledDate:'2026-06-01', dueDate:'2026-06-01', createdAt:T },
+      { id:uid(), title:'מועדון — לכתוב: קופי דיוור + סטורי + פוסט הכרזה', priority:'fire', categories:['content'], category:'content', estimatedMinutes:60, completed:false, completedAt:null, parentId:'ms-moadon', scheduledDate:'2026-06-02', dueDate:'2026-06-02', createdAt:T },
+      { id:uid(), title:'מועדון — להכין: קריאטיב סטורי ממומן (וידאו/תמונה)', priority:'fire', categories:['content'], category:'content', estimatedMinutes:45, completed:false, completedAt:null, parentId:'ms-moadon', scheduledDate:'2026-06-04', dueDate:'2026-06-04', createdAt:T },
+      { id:uid(), title:'מועדון — לבדוק: מוצר WC, תשלום, גישה עובדת', priority:'fire', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:'ms-moadon', scheduledDate:'2026-06-06', dueDate:'2026-06-06', createdAt:T },
+      { id:uid(), title:'מועדון — יום השקה: לעלות הכל + לעקוב', priority:'fire', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:'ms-moadon', scheduledDate:'2026-06-07', dueDate:'2026-06-07', createdAt:T },
+      // יומולדת דניאל June 15 (prep from June 8)
+      { id:uid(), title:'יומולדת דניאל — לתכנן: מה במבצע, כמה % הנחה, 48 שעות', priority:'week', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:'ms-daniel', scheduledDate:'2026-06-08', dueDate:'2026-06-08', createdAt:T },
+      { id:uid(), title:'יומולדת דניאל — לכתוב: קופי אישי + דיוור + סטורי', priority:'week', categories:['content'], category:'content', estimatedMinutes:45, completed:false, completedAt:null, parentId:'ms-daniel', scheduledDate:'2026-06-10', dueDate:'2026-06-10', createdAt:T },
+      { id:uid(), title:'יומולדת דניאל — להכין: קריאטיב + תמונת דניאל', priority:'week', categories:['content'], category:'content', estimatedMinutes:30, completed:false, completedAt:null, parentId:'ms-daniel', scheduledDate:'2026-06-12', dueDate:'2026-06-12', createdAt:T },
+      { id:uid(), title:'יומולדת דניאל — להגדיר: קוד קופון + מחיר מבצע באתר', priority:'week', categories:['business'], category:'business', estimatedMinutes:20, completed:false, completedAt:null, parentId:'ms-daniel', scheduledDate:'2026-06-14', dueDate:'2026-06-14', createdAt:T },
+      { id:uid(), title:'יומולדת דניאל — לשלוח: דיוור + לעלות סטורי + פוסט', priority:'fire', categories:['business','content'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:'ms-daniel', scheduledDate:'2026-06-15', dueDate:'2026-06-15', createdAt:T },
+      { id:uid(), title:'יומולדת דניאל — לסגור: לכבות קוד קופון, לדווח מכירות', priority:'week', categories:['business'], category:'business', estimatedMinutes:15, completed:false, completedAt:null, parentId:'ms-daniel', scheduledDate:'2026-06-17', dueDate:'2026-06-17', createdAt:T },
+      // 3 מדריכים June 20 (prep from June 15)
+      { id:uid(), title:'3 מדריכים — לבחור נושאים + לכתוב תוכן (מדריך 1)', priority:'week', categories:['business','content'], category:'business', estimatedMinutes:90, completed:false, completedAt:null, parentId:'ms-guides', scheduledDate:'2026-06-15', dueDate:'2026-06-15', createdAt:T },
+      { id:uid(), title:'3 מדריכים — לכתוב מדריכים 2+3', priority:'week', categories:['business','content'], category:'business', estimatedMinutes:90, completed:false, completedAt:null, parentId:'ms-guides', scheduledDate:'2026-06-17', dueDate:'2026-06-17', createdAt:T },
+      { id:uid(), title:'3 מדריכים — להעלות לאתר + להגדיר מחיר + לבדוק', priority:'week', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:'ms-guides', scheduledDate:'2026-06-19', dueDate:'2026-06-19', createdAt:T },
+      { id:uid(), title:'3 מדריכים — יום השקה: לשלוח דיוור + סטורי', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:'ms-guides', scheduledDate:'2026-06-20', dueDate:'2026-06-20', createdAt:T },
+    ];
+
+    const existingTaskTitles = new Set((st.tasks||[]).map(t=>t.title));
+    juneBackwardTasks.forEach(t => {
+      if (!existingTaskTitles.has(t.title)) st.tasks.unshift(t);
+    });
 
     // v4 tasks: June-July strategy
     const v4Tasks = [
