@@ -139,6 +139,22 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
 .badge-wait { background:var(--wait-bg); color:var(--text-muted); }
 .badge-green { background:var(--green-light); color:var(--green); }
 
+/* EDIT BUTTON */
+.edit-btn { background:none; border:none; color:#ccc; font-size:14px; cursor:pointer; padding:4px 2px; flex-shrink:0; transition:color .15s; }
+.edit-btn:hover { color:var(--green); }
+
+/* MONTH VIEW */
+.month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.month-day { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 4px; text-align:center; cursor:pointer; min-height:52px; }
+.month-day.today { border-color:var(--green); background:var(--green-pale); }
+.month-day.other-month { opacity:.35; }
+.month-day-num { font-size:13px; font-weight:700; margin-bottom:4px; }
+.month-day-dots { display:flex; justify-content:center; gap:2px; flex-wrap:wrap; }
+.month-dot { width:6px; height:6px; border-radius:50%; background:var(--green-light); }
+.month-dot.fire { background:var(--fire); }
+.month-week-labels { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
+.month-week-label { text-align:center; font-size:10px; font-weight:700; color:var(--text-muted); }
+
 /* TASK ITEM — rich colored version */
 .task-item {
   display:flex; align-items:flex-start; gap:10px; padding:12px 14px;
@@ -612,20 +628,50 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
 
     <!-- WEEK SCREEN -->
     <div id="s-week" class="screen">
-      <!-- Day grid -->
-      <div class="card">
-        <div class="card-title">📅 השבוע</div>
-        <div class="week-grid" id="week-grid"></div>
+      <!-- Navigation + view toggle -->
+      <div class="flex-between" style="margin-bottom:12px;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="icon-btn" onclick="changeWeekOffset(-1)" title="שבוע קודם">◀</button>
+          <button class="btn btn-sm btn-ghost" onclick="resetWeekOffset()" id="week-now-btn">עכשיו</button>
+          <button class="icon-btn" onclick="changeWeekOffset(1)" title="שבוע הבא">▶</button>
+        </div>
+        <span id="week-range-label" style="font-size:13px;font-weight:700;color:var(--text-muted);"></span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-secondary" id="view-week-btn" onclick="setCalView('week',this)" style="background:var(--green);color:#fff;border-color:var(--green);">שבוע</button>
+          <button class="btn btn-sm btn-ghost" id="view-month-btn" onclick="setCalView('month',this)">חודש</button>
+        </div>
       </div>
 
-      <!-- Selected day tasks -->
-      <div class="card">
-        <div class="section-header">
-          <div class="section-title" id="week-day-title">משימות היום</div>
-          <span class="section-count" id="week-day-count"></span>
+      <!-- Week view -->
+      <div id="cal-week-view">
+        <div class="card" style="padding:12px;">
+          <div class="week-grid" id="week-grid"></div>
         </div>
-        <div id="week-day-tasks"></div>
-        <div id="week-day-cal"></div>
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title" id="week-day-title">משימות היום</div>
+            <div style="display:flex;gap:6px;">
+              <span class="section-count" id="week-day-count"></span>
+              <button class="btn btn-sm btn-secondary" onclick="openDayPicker()">+ הוסיפי משימה</button>
+            </div>
+          </div>
+          <div id="week-day-tasks"></div>
+          <div id="week-day-cal"></div>
+        </div>
+      </div>
+
+      <!-- Month view -->
+      <div id="cal-month-view" style="display:none;">
+        <div class="card" style="padding:12px;">
+          <div id="month-title" style="text-align:center;font-size:16px;font-weight:700;margin-bottom:10px;"></div>
+          <div class="month-week-labels">
+            <div class="month-week-label">א׳</div><div class="month-week-label">ב׳</div>
+            <div class="month-week-label">ג׳</div><div class="month-week-label">ד׳</div>
+            <div class="month-week-label">ה׳</div><div class="month-week-label">ו׳</div>
+            <div class="month-week-label">ש׳</div>
+          </div>
+          <div class="month-grid" id="month-grid"></div>
+        </div>
       </div>
 
       <!-- Weekly goals -->
@@ -637,7 +683,7 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
         <div id="weekly-goals-list"></div>
       </div>
 
-      <!-- Progress this week -->
+      <!-- Progress -->
       <div class="card">
         <div class="card-title">📊 התקדמות השבוע</div>
         <div id="week-progress"></div>
@@ -710,6 +756,13 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
 
       <!-- Content ideas tab -->
       <div id="plan-content" style="display:none">
+        <div class="filter-bar" style="margin-bottom:10px;">
+          <button class="filter-chip idea-filter-btn" onclick="filterIdeas('all',this)" style="background:var(--green);color:#fff;border-color:var(--green);">הכל</button>
+          <button class="filter-chip idea-filter-btn" onclick="filterIdeas('reel',this)">🎬 ריל</button>
+          <button class="filter-chip idea-filter-btn" onclick="filterIdeas('post',this)">📝 פוסט</button>
+          <button class="filter-chip idea-filter-btn" onclick="filterIdeas('carousel',this)">🃏 קרוסלה</button>
+          <button class="filter-chip idea-filter-btn" onclick="filterIdeas('story',this)">📖 סטורי</button>
+        </div>
         <div id="content-ideas-list"></div>
         <div style="display:flex;gap:8px;margin-top:8px;">
           <input class="input" id="new-idea-input" placeholder="רעיון חדש לתוכן..." style="flex:1">
@@ -949,6 +1002,142 @@ html, body { height:100%; font-family:'Heebo',sans-serif; background:var(--bg); 
   </div>
 </div>
 
+<!-- MODAL: EDIT TASK -->
+<div class="modal-overlay" id="modal-edit-task" onclick="overlayClose(event,'modal-edit-task')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="flex-between">
+      <div class="modal-title">✏️ עריכת משימה</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-task')">✕</button>
+    </div>
+    <input type="hidden" id="edit-task-id">
+    <div class="form-group">
+      <label class="form-label">שם המשימה</label>
+      <input class="input" id="edit-task-title">
+    </div>
+    <div class="form-group">
+      <label class="form-label">עדיפות</label>
+      <select class="select" id="edit-task-priority">
+        <option value="fire">🔴 בוער</option>
+        <option value="week">🟡 השבוע</option>
+        <option value="wait">⚪ ממתין</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">קטגוריות</label>
+      <div class="cat-pills" id="edit-cat-pills">
+        <button type="button" class="cat-pill cp-business" onclick="toggleEditCat('business',this)">💼 עסק</button>
+        <button type="button" class="cat-pill cp-content"  onclick="toggleEditCat('content',this)">📱 תוכן</button>
+        <button type="button" class="cat-pill cp-personal" onclick="toggleEditCat('personal',this)">🌸 אישי</button>
+        <button type="button" class="cat-pill cp-learning" onclick="toggleEditCat('learning',this)">📚 למידה</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div class="form-group" style="flex:1">
+        <label class="form-label">תאריך יעד</label>
+        <input class="input" id="edit-task-due" type="date">
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">תאריך בלוח</label>
+        <input class="input" id="edit-task-scheduled" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">זמן משוער (דקות)</label>
+      <input class="input" id="edit-task-minutes" type="number">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1" onclick="saveTaskEdit()">💾 שמרי</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteTask(document.getElementById('edit-task-id').value);closeModal('modal-edit-task')">🗑️</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DAY TASK PICKER -->
+<div class="modal-overlay" id="modal-day-picker" onclick="overlayClose(event,'modal-day-picker')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="flex-between">
+      <div class="modal-title" id="day-picker-title">📅 הוסיפי משימה ליום</div>
+      <button class="modal-close" onclick="closeModal('modal-day-picker')">✕</button>
+    </div>
+    <p class="text-muted mb-16">בחרי משימה מהרשימה — תשובץ לתאריך הנבחר</p>
+    <div id="day-picker-list"></div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT CONTENT IDEA -->
+<div class="modal-overlay" id="modal-edit-idea" onclick="overlayClose(event,'modal-edit-idea')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="flex-between">
+      <div class="modal-title">✏️ עריכת רעיון</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-idea')">✕</button>
+    </div>
+    <input type="hidden" id="edit-idea-id">
+    <div class="form-group">
+      <label class="form-label">נושא</label>
+      <input class="input" id="edit-idea-title">
+    </div>
+    <div class="form-group">
+      <label class="form-label">סוג</label>
+      <select class="select" id="edit-idea-type">
+        <option value="post">📝 פוסט</option>
+        <option value="reel">🎬 ריל</option>
+        <option value="carousel">🃏 קרוסלה</option>
+        <option value="story">📖 סטורי</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">סטטוס</label>
+      <select class="select" id="edit-idea-status">
+        <option value="idea">💡 רעיון</option>
+        <option value="planned">📅 מתוכנן</option>
+        <option value="done">✅ פורסם</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveIdeaEdit()">💾 שמרי</button>
+  </div>
+</div>
+
+<!-- MODAL: EDIT LEARNING ITEM -->
+<div class="modal-overlay" id="modal-edit-learn" onclick="overlayClose(event,'modal-edit-learn')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="flex-between">
+      <div class="modal-title">✏️ עריכת פריט למידה</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-learn')">✕</button>
+    </div>
+    <input type="hidden" id="edit-learn-id">
+    <div class="form-group">
+      <label class="form-label">שם</label>
+      <input class="input" id="edit-learn-title">
+    </div>
+    <div class="form-group">
+      <label class="form-label">סוג</label>
+      <select class="select" id="edit-learn-type">
+        <option value="course">🎓 קורס</option>
+        <option value="book">📖 ספר</option>
+        <option value="podcast">🎙️ פודקאסט</option>
+        <option value="video">🎬 וידאו</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">מי מעביר</label>
+      <input class="input" id="edit-learn-author">
+    </div>
+    <div class="form-group">
+      <label class="form-label">סטטוס</label>
+      <select class="select" id="edit-learn-status">
+        <option value="want">רוצה</option>
+        <option value="in_progress">בתהליך</option>
+        <option value="done">סיימתי ✅</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveLearnEdit()">💾 שמרי</button>
+  </div>
+</div>
+
 <!-- MODAL: GOAL EDITOR -->
 <div class="modal-overlay" id="modal-goal" onclick="overlayClose(event,'modal-goal')">
   <div class="modal-sheet">
@@ -1073,7 +1262,11 @@ let dayRating = 0;
 let selectedCommitments = [];
 let selectedWeekDay = null;
 let activeFilters = new Set();
-let selectedCategories = []; // for add-task modal multi-select
+let selectedCategories = [];
+let editTaskCategories = [];
+let weekOffset = 0;
+let calView = 'week';
+let ideaFilter = 'all';
 
 // ================================================================
 // STORAGE
@@ -1451,6 +1644,137 @@ const PRI_COLORS = {
   wait: { tag:'tag-wait', label:'⚪ ממתין' }
 };
 
+// ================================================================
+// TASK EDIT
+// ================================================================
+function openTaskEdit(id) {
+  const state = getState();
+  const t = state.tasks.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('edit-task-id').value = id;
+  document.getElementById('edit-task-title').value = t.title;
+  document.getElementById('edit-task-priority').value = t.priority || 'week';
+  document.getElementById('edit-task-due').value = t.dueDate || '';
+  document.getElementById('edit-task-scheduled').value = t.scheduledDate || '';
+  document.getElementById('edit-task-minutes').value = t.estimatedMinutes || 30;
+  editTaskCategories = [...(t.categories || [t.category].filter(Boolean))];
+  // Update pills
+  document.querySelectorAll('#edit-cat-pills .cat-pill').forEach(btn => {
+    const cat = btn.classList[1]?.replace('cp-','');
+    btn.classList.toggle('selected', editTaskCategories.includes(cat));
+  });
+  openModal('modal-edit-task');
+}
+
+function toggleEditCat(cat, btn) {
+  const idx = editTaskCategories.indexOf(cat);
+  if (idx > -1) { editTaskCategories.splice(idx,1); btn.classList.remove('selected'); }
+  else { editTaskCategories.push(cat); btn.classList.add('selected'); }
+}
+
+function saveTaskEdit() {
+  const id = document.getElementById('edit-task-id').value;
+  const cats = editTaskCategories.length ? editTaskCategories : ['business'];
+  updateState(state => {
+    const t = state.tasks.find(t => t.id === id);
+    if (t) {
+      t.title = document.getElementById('edit-task-title').value.trim() || t.title;
+      t.priority = document.getElementById('edit-task-priority').value;
+      t.categories = cats; t.category = cats[0];
+      t.dueDate = document.getElementById('edit-task-due').value || null;
+      t.scheduledDate = document.getElementById('edit-task-scheduled').value || null;
+      t.estimatedMinutes = parseInt(document.getElementById('edit-task-minutes').value) || 30;
+    }
+    return state;
+  });
+  closeModal('modal-edit-task');
+  renderNow(); renderWeek();
+  toast('✅ משימה עודכנה!');
+}
+
+// ================================================================
+// WEEK NAVIGATION + CALENDAR VIEW
+// ================================================================
+function changeWeekOffset(dir) { weekOffset += dir; renderWeek(); }
+function resetWeekOffset() { weekOffset = 0; selectedWeekDay = todayStr(); renderWeek(); }
+
+function setCalView(view, btn) {
+  calView = view;
+  document.getElementById('cal-week-view').style.display = view === 'week' ? 'block' : 'none';
+  document.getElementById('cal-month-view').style.display = view === 'month' ? 'block' : 'none';
+  document.getElementById('view-week-btn').style.cssText = view === 'week' ? 'background:var(--green);color:#fff;border-color:var(--green)' : '';
+  document.getElementById('view-month-btn').style.cssText = view === 'month' ? 'background:var(--green);color:#fff;border-color:var(--green)' : '';
+  renderWeek();
+}
+
+function getWeekDaysWithOffset() {
+  const now = new Date();
+  now.setDate(now.getDate() + weekOffset * 7);
+  const dayOfWeek = now.getDay();
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - dayOfWeek);
+  return Array.from({length:7}, (_,i) => { const d = new Date(sunday); d.setDate(sunday.getDate()+i); return d; });
+}
+
+function openDayPicker() {
+  const state = getState();
+  const ds = selectedWeekDay || todayStr();
+  const d = new Date(ds + 'T12:00:00');
+  document.getElementById('day-picker-title').textContent = '📅 הוסיפי משימה ל' + hebrewDay(d) + ' ' + d.getDate();
+  const tasks = (state.tasks||[]).filter(t => !t.completed && t.scheduledDate !== ds);
+  document.getElementById('day-picker-list').innerHTML = tasks.length
+    ? tasks.map(t => `
+        <div class="task-item pri-${t.priority}" onclick="assignTaskToDay('${t.id}','${ds}')">
+          <div class="task-check"></div>
+          <div class="task-body">
+            <div class="task-title">${esc(t.title)}</div>
+            <div class="task-tags"><span class="tag ${PRI_COLORS[t.priority]?.tag||''}">${PRI_COLORS[t.priority]?.label||''}</span></div>
+          </div>
+        </div>`).join('')
+    : '<p class="text-muted" style="text-align:center;padding:16px">כל המשימות כבר בלוח</p>';
+  openModal('modal-day-picker');
+}
+
+function assignTaskToDay(taskId, ds) {
+  updateState(state => {
+    const t = state.tasks.find(t => t.id === taskId);
+    if (t) t.scheduledDate = ds;
+    return state;
+  });
+  closeModal('modal-day-picker');
+  renderWeek();
+  toast('📅 משימה שובצה ליום!');
+}
+
+function renderMonthView(state) {
+  const now = new Date();
+  now.setDate(1);
+  now.setMonth(now.getMonth() + Math.floor(weekOffset / 4.3));
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  document.getElementById('month-title').textContent = formatMonthHe(now);
+
+  const firstDay = new Date(year, month, 1);
+  const startDay = firstDay.getDay(); // 0=sun
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayKey = todayStr();
+
+  let html = '';
+  // Empty cells before first day
+  for (let i = 0; i < startDay; i++) html += '<div class="month-day other-month"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayTasks = (state.tasks||[]).filter(t => t.scheduledDate === ds && !t.completed);
+    const isToday = ds === todayKey;
+    const dots = dayTasks.slice(0,5).map(t => `<div class="month-dot ${t.priority==='fire'?'fire':''}"></div>`).join('');
+    html += `<div class="month-day ${isToday?'today':''}" onclick="selectWeekDay('${ds}');setCalView('week',null)">
+      <div class="month-day-num">${d}</div>
+      <div class="month-day-dots">${dots}</div>
+    </div>`;
+  }
+  document.getElementById('month-grid').innerHTML = html;
+}
+
 function renderTaskItem(t) {
   const cats = t.categories || [t.category].filter(Boolean);
   const priInfo = PRI_COLORS[t.priority] || PRI_COLORS.wait;
@@ -1458,25 +1782,22 @@ function renderTaskItem(t) {
   const timeLabel = mins
     ? (mins <= 15 ? `⚡ ${mins}'` : mins <= 30 ? `⏱ ${mins}'` : mins <= 60 ? `⏰ ${mins}'` : `🕐 ${mins}'`)
     : null;
-
-  const catTags = cats.map(c => {
-    const ci = CAT_COLORS[c];
-    return ci ? `<span class="tag ${ci.tag}">${ci.label}</span>` : '';
-  }).join('');
+  const catTags = cats.map(c => { const ci = CAT_COLORS[c]; return ci ? `<span class="tag ${ci.tag}">${ci.label}</span>` : ''; }).join('');
 
   return `
     <div class="task-item pri-${t.priority} ${t.completed?'done':''}" id="task-${t.id}">
       <div class="task-check" onclick="completeTask('${t.id}')">${t.completed?'✓':''}</div>
-      <div class="task-body">
+      <div class="task-body" onclick="openTaskEdit('${t.id}')" style="cursor:pointer;">
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-tags">
           <span class="tag ${priInfo.tag}">${priInfo.label}</span>
           ${catTags}
           ${timeLabel ? `<span class="tag tag-time">${timeLabel}</span>` : ''}
           ${t.dueDate ? `<span class="tag" style="background:#f5f5f5;color:#555;">📅 ${t.dueDate}</span>` : ''}
-          ${t.parentId ? `<span class="tag" style="background:#e8f5e9;color:#2e7d32;">⬆ תת-משימה</span>` : ''}
+          ${t.parentId ? `<span class="tag" style="background:#e8f5e9;color:#2e7d32;">⬆ תת</span>` : ''}
         </div>
       </div>
+      <button class="edit-btn" onclick="openTaskEdit('${t.id}')">✏️</button>
       <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
     </div>
   `;
@@ -1675,9 +1996,20 @@ function confirmBreakdown() {
 // ================================================================
 function renderWeek() {
   const state = getState();
-  const days = getWeekDays();
+  const days = weekOffset === 0 ? getWeekDays() : getWeekDaysWithOffset();
   const today = todayStr();
-  if (!selectedWeekDay) selectedWeekDay = today;
+  if (!selectedWeekDay || weekOffset !== 0) selectedWeekDay = selectedWeekDay || today;
+
+  // Update range label
+  const rangeEl = document.getElementById('week-range-label');
+  if (rangeEl) {
+    const start = days[0], end = days[6];
+    rangeEl.textContent = start.getDate() + '/' + (start.getMonth()+1) + ' — ' + end.getDate() + '/' + (end.getMonth()+1);
+  }
+  const nowBtn = document.getElementById('week-now-btn');
+  if (nowBtn) nowBtn.style.fontWeight = weekOffset === 0 ? '900' : '400';
+
+  if (calView === 'month') { renderMonthView(state); return; }
 
   // Grid
   const grid = document.getElementById('week-grid');
@@ -2067,22 +2399,33 @@ function renderLearning(state) {
   const el = document.getElementById('learning-list');
   if (!el) return;
   el.innerHTML = items.length ? items.map(i => `
-    <div class="content-idea" style="flex-direction:column;align-items:flex-start;gap:6px;padding:12px 14px;">
-      <div style="display:flex;align-items:center;gap:10px;width:100%;">
-        <span style="font-size:20px;">${LEARN_EMOJI[i.type]||'📚'}</span>
-        <div style="flex:1;">
-          <div class="idea-title" style="font-size:14px;font-weight:700;">${esc(i.title)}</div>
-          ${i.author ? `<div style="font-size:12px;color:var(--text-muted);">${esc(i.author)}</div>` : ''}
-        </div>
-        <select style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;background:var(--surface);" onchange="updateLearnStatus('${i.id}',this.value)">
-          <option value="want" ${i.status==='want'?'selected':''}>רוצה</option>
-          <option value="in_progress" ${i.status==='in_progress'?'selected':''}>בתהליך</option>
-          <option value="done" ${i.status==='done'?'selected':''}>סיימתי ✅</option>
-        </select>
-        <button class="idea-del" onclick="deleteLearningItem('${i.id}')">✕</button>
+    <div class="content-idea" style="gap:8px;padding:12px 14px;align-items:center;">
+      <span style="font-size:20px;flex-shrink:0;">${LEARN_EMOJI[i.type]||'📚'}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="idea-title" style="font-size:14px;font-weight:700;">${esc(i.title)}</div>
+        ${i.author ? `<div style="font-size:11px;color:var(--text-muted);">${esc(i.author)}</div>` : ''}
       </div>
+      <select style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;background:var(--surface);flex-shrink:0;" onchange="updateLearnStatus('${i.id}',this.value)">
+        <option value="want" ${i.status==='want'?'selected':''}>רוצה</option>
+        <option value="in_progress" ${i.status==='in_progress'?'selected':''}>בתהליך</option>
+        <option value="done" ${i.status==='done'?'selected':''}>סיימתי ✅</option>
+      </select>
+      <button class="edit-btn" onclick="openLearnEdit('${i.id}')">✏️</button>
+      <button class="idea-del" onclick="deleteLearningItem('${i.id}')">✕</button>
     </div>
   `).join('') : '<div class="empty-state"><div class="emoji">📚</div><p>הוסיפי קורסים, ספרים ופודקאסטים</p></div>';
+}
+
+function openLearnEdit(id) {
+  const state = getState();
+  const i = (state.learningItems||[]).find(i => i.id === id);
+  if (!i) return;
+  document.getElementById('edit-learn-id').value = id;
+  document.getElementById('edit-learn-title').value = i.title;
+  document.getElementById('edit-learn-type').value = i.type;
+  document.getElementById('edit-learn-author').value = i.author || '';
+  document.getElementById('edit-learn-status').value = i.status || 'want';
+  openModal('modal-edit-learn');
 }
 
 function addLearningItem() {
@@ -2090,7 +2433,7 @@ function addLearningItem() {
   if (!title) { toast('כתבי שם'); return; }
   updateState(state => {
     if (!state.learningItems) state.learningItems = [];
-    state.learningItems.push({
+    state.learningItems.unshift({ // למעלה!
       id: uid(), title,
       type: document.getElementById('new-learn-type').value,
       author: document.getElementById('new-learn-author').value.trim(),
@@ -2117,15 +2460,56 @@ function deleteLearningItem(id) {
   renderLearning(getState());
 }
 
+let ideaTypeFilter = 'all';
+function filterIdeas(type, btn) {
+  ideaTypeFilter = type;
+  document.querySelectorAll('.idea-filter-btn').forEach(b => { b.style.background=''; b.style.color=''; b.style.borderColor=''; });
+  btn.style.background='var(--green)'; btn.style.color='#fff'; btn.style.borderColor='var(--green)';
+  renderContentIdeas(getState());
+}
+
 function renderContentIdeas(state) {
-  const ideas = state.contentIdeas || [];
-  document.getElementById('content-ideas-list').innerHTML = ideas.map(i => `
-    <div class="content-idea">
+  let ideas = (state.contentIdeas || []);
+  if (ideaTypeFilter !== 'all') ideas = ideas.filter(i => i.type === ideaTypeFilter);
+  const STATUS_BADGE = { idea:'💡 רעיון', planned:'📅 מתוכנן', done:'✅ פורסם' };
+  document.getElementById('content-ideas-list').innerHTML = ideas.length ? ideas.map(i => `
+    <div class="content-idea" style="gap:8px;">
       <div class="idea-type">${typeEmoji(i.type)}</div>
-      <div class="idea-title">${esc(i.title)}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="idea-title">${esc(i.title)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${STATUS_BADGE[i.status]||''}</div>
+      </div>
+      <button class="edit-btn" onclick="openIdeaEdit('${i.id}')">✏️</button>
       <button class="idea-del" onclick="deleteIdea('${i.id}')">✕</button>
     </div>
-  `).join('') || '<div class="empty-state"><div class="emoji">💡</div><p>הוסיפי רעיונות לתוכן</p></div>';
+  `).join('') : '<div class="empty-state"><div class="emoji">💡</div><p>אין רעיונות</p></div>';
+}
+
+function openIdeaEdit(id) {
+  const state = getState();
+  const i = (state.contentIdeas||[]).find(i => i.id === id);
+  if (!i) return;
+  document.getElementById('edit-idea-id').value = id;
+  document.getElementById('edit-idea-title').value = i.title;
+  document.getElementById('edit-idea-type').value = i.type;
+  document.getElementById('edit-idea-status').value = i.status || 'idea';
+  openModal('modal-edit-idea');
+}
+
+function saveIdeaEdit() {
+  const id = document.getElementById('edit-idea-id').value;
+  updateState(state => {
+    const i = (state.contentIdeas||[]).find(i => i.id === id);
+    if (i) {
+      i.title = document.getElementById('edit-idea-title').value.trim() || i.title;
+      i.type = document.getElementById('edit-idea-type').value;
+      i.status = document.getElementById('edit-idea-status').value;
+    }
+    return state;
+  });
+  closeModal('modal-edit-idea');
+  renderPlan();
+  toast('✅ רעיון עודכן!');
 }
 
 function addContentIdea() {
@@ -2134,7 +2518,7 @@ function addContentIdea() {
   const type = document.getElementById('new-idea-type').value;
   updateState(state => {
     if (!state.contentIdeas) state.contentIdeas = [];
-    state.contentIdeas.push({ id: uid(), title, type, status: 'idea' });
+    state.contentIdeas.unshift({ id: uid(), title, type, status: 'idea' }); // למעלה!
     return state;
   });
   document.getElementById('new-idea-input').value = '';
@@ -2145,6 +2529,23 @@ function addContentIdea() {
 function deleteIdea(id) {
   updateState(state => { state.contentIdeas = (state.contentIdeas||[]).filter(i => i.id !== id); return state; });
   renderPlan();
+}
+
+function saveLearnEdit() {
+  const id = document.getElementById('edit-learn-id').value;
+  updateState(state => {
+    const i = (state.learningItems||[]).find(i => i.id === id);
+    if (i) {
+      i.title = document.getElementById('edit-learn-title').value.trim() || i.title;
+      i.type = document.getElementById('edit-learn-type').value;
+      i.author = document.getElementById('edit-learn-author').value.trim();
+      i.status = document.getElementById('edit-learn-status').value;
+    }
+    return state;
+  });
+  closeModal('modal-edit-learn');
+  renderLearning(getState());
+  toast('✅ עודכן!');
 }
 
 // ================================================================
