@@ -3329,6 +3329,42 @@ function loadInitialData() {
       '2026-09': 200000, '2026-10': 250000, '2026-11': 300000, '2026-12': 300000
     };
 
+    // v4 tasks: June-July strategy
+    const v4Tasks = [
+      // 🔴 בוערות — יוני
+      { id:uid(), title:'השיק מועדון בטבע שלך — יוני 2026 (צפי ₪15K)', priority:'fire', categories:['business'], category:'business', estimatedMinutes:240, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:'2026-06-07', createdAt:T },
+      { id:uid(), title:'הגדר תקציב Meta Ads יוני: ₪26,000 — פצלי לפי מוצרים', priority:'fire', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:T, dueDate:T, createdAt:T },
+      // 🟡 השבוע — קמפיינים פיזיים
+      { id:uid(), title:'קמפיין סטורי: תערובת מחזקת — ₪3,500/חודש (ROAS יעד 5x)', priority:'week', categories:['business'], category:'business', estimatedMinutes:45, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-10', createdAt:T },
+      { id:uid(), title:'קמפיין סטורי: אל גרד — ₪2,000/חודש', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-10', createdAt:T },
+      { id:uid(), title:'קמפיין סטורי: ראש נקי + מארז מזיקים — ₪2,000/חודש (כינים עונה)', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-10', createdAt:T },
+      { id:uid(), title:'קמפיין סטורי: מארז קיץ + הוקלי בטן + הוקלי שיניים — ₪2,500/חודש', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-10', createdAt:T },
+      { id:uid(), title:'קמפיין סטורי: אל תוש טבעי + מארז ביי באז — ₪2,000/חודש', priority:'week', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-10', createdAt:T },
+      // 🟡 השבוע — דיגיטלי
+      { id:uid(), title:'לכתוב + להעלות 3 מדריכים קצרים לרכישה (צפי ₪5K כ"א)', priority:'week', categories:['business','content'], category:'business', estimatedMinutes:180, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-15', createdAt:T },
+      { id:uid(), title:'קמפיין מועדון: סטורי ממומן + ריל לייצר 150+ גייסות ₪15K', priority:'week', categories:['business'], category:'business', estimatedMinutes:60, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-07', createdAt:T },
+      // ⚪ ממתין
+      { id:uid(), title:'לבדוק ROAS בתום שבוע ראשון — לאזן תקציב לפי ביצועים', priority:'wait', categories:['business'], category:'business', estimatedMinutes:30, completed:false, completedAt:null, parentId:null, scheduledDate:null, dueDate:'2026-06-14', createdAt:T },
+    ];
+
+    const v4ExistingTitles = new Set((st.tasks||[]).map(t=>t.title));
+    const v4NewTasks = v4Tasks.filter(t => !v4ExistingTitles.has(t.title));
+    st.tasks = [...v4NewTasks, ...(st.tasks||[])]; // חדשים למעלה!
+
+    // Marketing plan — June/July
+    if (!st.marketingPlan) st.marketingPlan = [];
+    const mktExisting = new Set(st.marketingPlan.map(p=>p.topic));
+    const juneJulyPlan = [
+      { id:uid(), topic:'השקת מועדון — Build Up סטורי', type:'story', date:'2026-06-01', status:'planned' },
+      { id:uid(), topic:'השקת מועדון — פוסט הכרזה', type:'post', date:'2026-06-07', status:'planned' },
+      { id:uid(), topic:'מארז קיץ — ריל', type:'reel', date:'2026-06-05', status:'planned' },
+      { id:uid(), topic:'ראש נקי + כינים עונה — קרוסלה', type:'carousel', date:'2026-06-10', status:'planned' },
+      { id:uid(), topic:'תערובת מחזקת — ריל שימוש', type:'reel', date:'2026-06-15', status:'planned' },
+      { id:uid(), topic:'אל גרד — סטורי ממומן', type:'story', date:'2026-06-20', status:'planned' },
+      { id:uid(), topic:'3 מדריכים חדשים — הכרזה', type:'post', date:'2026-06-25', status:'planned' },
+    ];
+    st.marketingPlan = [...juneJulyPlan.filter(p=>!mktExisting.has(p.topic)), ...st.marketingPlan];
+
     st.dataVersion = 4;
     return st;
   });
